@@ -93,6 +93,19 @@ for the porting phase.
   the algorithms to[o]."* Lesson 1 was pure method; that was right for one
   lesson, not for the course.
 
+## The workspace is a git repo
+
+`~/learn-algorithms` is a git repository, pushed to
+**https://github.com/androbat11/learn-algorithms** (private, `main`). He set it
+up on 2026-09-08 so he can continue from another computer.
+
+- `.claude/skills/teach/` is committed *inside* the repo, so a clone is
+  self-contained and `/teach` works on any machine with Claude Code.
+- **Commit at the end of every session.** The learning records and `NOTES.md` are
+  the only durable state; if they are not pushed, the next machine starts blind.
+- His curriculum tick state is `localStorage` and does *not* travel. It was never
+  evidence anyway — see [[0008-written-is-not-taken]].
+
 ## Standing process rule
 
 **Always chase the rep.** Each lesson ends with work to bring back; if the next

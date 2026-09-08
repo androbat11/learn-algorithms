@@ -40,9 +40,12 @@ versus reversed input. That is the whole feedback loop.
 ## Resuming on another computer
 
 ```bash
-git clone <this repo>
+git clone https://github.com/androbat11/learn-algorithms.git
 cd learn-algorithms
 ```
+
+Private repo — `gh auth login` or a GitHub credential is needed on the new
+machine.
 
 **To read lessons:** open any file in `lessons/` or `reference/` directly in a
 browser. Static HTML, works offline, works from `file://`.
