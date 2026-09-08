@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3 · From Contract to Code</title>
+<link rel="stylesheet" href="../assets/course.css">
+<link rel="stylesheet" href="../assets/widgets.css">
+<link rel="stylesheet" href="../assets/exercise.css">
+<style>
+  .graded { border: 1px solid var(--rule); border-radius: 3px; margin: 1.8rem 0; overflow: hidden; }
+  .graded-row { display: grid; grid-template-columns: 5.5rem 1fr; gap: 1rem;
+    padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--rule); font-size: 0.93rem; }
+  .graded-row:last-child { border-bottom: 0; }
+  .graded-row dt { font-family: var(--sans); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase; padding-top: 0.2rem; }
+  .graded-row dd { margin: 0; }
+  .graded-row.ok    { background: var(--good-bg); }
+  .graded-row.ok dt { color: var(--good); }
+  .graded-row.gap   { background: var(--bad-bg); }
+  .graded-row.gap dt{ color: var(--bad); }
+  .graded-row .verdict-line { font-family: var(--sans); font-size: 0.8rem;
+    color: var(--ink-soft); margin-top: 0.35rem; line-height: 1.5; }
+  .yours { font-family: var(--mono); font-size: 0.82rem; }
+  @media (max-width: 560px) { .graded-row { grid-template-columns: 1fr; gap: 0.3rem; } }
+  .cmp2 { width:100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.88rem; }
+  .cmp2 th, .cmp2 td { text-align:left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--rule); }
+  .cmp2 th { font-family: var(--sans); font-size: 0.68rem; font-weight:700;
+    letter-spacing:0.09em; text-transform:uppercase; color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page anchor">
+
+<header class="masthead">
+  <p class="eyebrow">Lesson 03 · Patterns · TypeScript</p>
+  <h1>From Contract to Code</h1>
+  <p class="standfirst">Your contract, graded — then the thing it was for. Two
+  Sum, from five lines of English to a solution that runs in one pass.</p>
+  <p class="meta">≈25 minutes · TypeScript · Follows
+  <a href="0002-insertion-sort.html">Lesson 2</a> · Cards:
+  <a href="../reference/problem-contract.html">Contract</a>,
+  <a href="../reference/patterns.html">Patterns</a></p>
+</header>
+
+<p class="lede">You wrote a contract and sent it back, which is the first time
+the loop has actually closed. So this lesson starts where it should: with your
+work, marked honestly. Two lines are better than most people manage on a first
+attempt. Three have gaps, and one of those gaps is the interesting one.</p>
+
+<h2><span class="num">Marked</span>Your contract</h2>
+
+<dl class="graded">
+  <div class="graded-row ok">
+    <dt>Given</dt>
+    <dd>
+      <span class="yours">number[] and target number, unsorted, positive numbers.</span>
+      <div class="verdict-line"><strong>Solid.</strong> Both inputs, both types,
+      and you noted <em>unsorted</em> — which matters, because sorted input would
+      unlock a completely different approach. One thing: where did
+      <em>positive</em> come from? If the interviewer said it, it is a Given. If
+      you assumed it, it is an assumption, and Lesson 1 asked you to mark those
+      <em>had to ask</em>. Real Two Sum allows negatives.</div>
+    </dd>
+  </div>
+
+  <div class="graded-row ok">
+    <dt>Goal</dt>
+    <dd>
+      <span class="yours">Return a number[] with the indexes of the values.</span>
+      <div class="verdict-line"><strong>This is the win.</strong> Lesson 1 argued
+      that <em>indices versus values</em> is the single most important question
+      on this problem, and you asked it unprompted on your first attempt. That is
+      not recall, that is transfer. It is also the line most people get wrong and
+      discover halfway through writing the return statement.
+      <br><br>What is still missing: what comes back when <strong>no pair
+      exists</strong>? And if several pairs work, is any one acceptable?</div>
+    </dd>
+  </div>
+
+  <div class="graded-row gap">
+    <dt>Bounds</dt>
+    <dd>
+      <span class="yours">2 &lt;= nums.length &lt;= 1000</span>
+      <div class="verdict-line"><strong>Recorded, but not spent.</strong> The
+      number is right and you found a real constraint. But the Bounds line is not
+      a place to store trivia — it exists to produce a <em>verdict</em>. You
+      wrote 1000 and drew nothing from it. We do that below, and the answer is
+      more interesting than you would expect.</div>
+    </dd>
+  </div>
+
+  <div class="graded-row gap">
+    <dt>Trace</dt>
+    <dd>
+      <span class="yours">nums[3, 4, 5, 6], target = 7   →   (nothing)</span>
+      <div class="verdict-line"><strong>Missing as a line, and incomplete as a
+      trace.</strong> Your example got folded into Bounds, and it has an input
+      but <em>no output</em>. That is the quiet version of the failure Lesson 1
+      warned about. An input alone proves nothing; the whole value is in
+      finishing it by hand. Yours finishes as <code>3 + 4 = 7</code>, so
+      <code>[0, 1]</code> — ten seconds of work that also confirms you are
+      returning indices.</div>
+    </dd>
+  </div>
+
+  <div class="graded-row gap">
+    <dt>Breaks</dt>
+    <dd>
+      <span class="yours">2 identical numbers summing up.</span>
+      <div class="verdict-line"><strong>Right instinct, two bugs merged into
+      one.</strong> These are different and only one of them is what you wrote:
+      <br>· <strong>Two equal elements that are a valid answer</strong> —
+      <code>[3,3]</code>, target 6. Answer is <code>[0,1]</code>. A naive
+      value-keyed map overwrites one and misses it.
+      <br>· <strong>Reusing a single element twice</strong> —
+      <code>[3, 9]</code>, target 6. Index 0 plus itself. Must be
+      <em>rejected</em>.
+      <br>One must work, one must fail. Also missing: no pair exists at all, and
+      the minimum input <code>n = 2</code>.</div>
+    </dd>
+  </div>
+</dl>
+
+<div class="callout">
+  <span class="callout-label">Score, honestly</span>
+  <p>Given and Goal are genuinely good, and Goal caught the thing this problem is
+  famous for. Bounds and Breaks are present but not yet doing work. Trace is the
+  one to fix, because it is the cheapest line to complete and the one that most
+  reliably catches a misunderstanding before it becomes code.</p>
+</div>
+
+<h2><span class="num">Bounds</span>What 1000 was telling you</h2>
+
+<p>Here is the move you skipped. A bound is not a fact to record, it is an
+instruction about which complexities you may use. Do the arithmetic:</p>
+
+<p style="text-align:center;font-family:var(--mono);font-size:0.95rem">
+n = 1000 &nbsp;→&nbsp; n² = 1,000,000</p>
+
+<p>A million operations is nothing — a few milliseconds. So the honest answer,
+which most tutorials will not give you: <strong>at this bound, the nested-loop
+brute force is fast enough.</strong> It would pass. If the interviewer had said
+<code>nums.length &lt;= 100000</code>, then n² is 10<sup>10</sup> and brute force
+is off the table before you type a character.<span class="sidenote">This is the
+whole function of the bounds table on the
+<a href="../reference/problem-contract.html">contract card</a>: read the size,
+get a verdict, and rule out approaches before writing them rather than after
+debugging them.</span></p>
+
+<p>We are still going to write the O(n) version — because it is what the question
+is actually testing, and because the technique it teaches is on your list. But
+notice what the Bounds line just bought you: permission to write the simple thing
+first, without anxiety, knowing it is acceptable. That is worth having when you
+are frozen.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Build it</span>Simple first, then better</h2>
+
+<div class="exercise" data-exercise data-fn="twoSumBrute">
+  <span class="ex-kicker">Exercise 1 · the obvious one</span>
+  <p class="ex-brief">Check every pair. Return the two indices as
+  <code>[i, j]</code> with <code>i &lt; j</code>, or <code>[]</code> if no pair
+  sums to the target. Never pair an element with itself.</p>
+  <textarea class="ex-code">function twoSumBrute(nums, target) {
+  // Try every pair (i, j) where j is always after i.
+  // Return [i, j], or [] if nothing works.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>Two nested loops. The outer from <code>i = 0</code>, the inner starting at
+    <code>j = i + 1</code> — that <code>+ 1</code> is what stops an element being
+    paired with itself, and it is why you never need a special case for it.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function twoSumBrute(nums, target) {
+  for (let i = 0; i &lt; nums.length; i++) {
+    for (let j = i + 1; j &lt; nums.length; j++) {
+      if (nums[i] + nums[j] === target) return [i, j];
+    }
+  }
+  return [];
+}</code></pre>
+    <p>O(n²) time, O(1) space. At n = 1000 this is fine, and saying so out loud
+    in an interview is a point in your favour, not against you.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"your own example [3,4,5,6] t=7", "args":[[3,4,5,6], 7],   "expect":[0,1]},
+    {"name":"classic [2,7,11,15] t=9",        "args":[[2,7,11,15], 9], "expect":[0,1]},
+    {"name":"answer not at the front",        "args":[[3,2,4], 6],     "expect":[1,2]},
+    {"name":"your break case [3,3] t=6",      "args":[[3,3], 6],       "expect":[0,1]},
+    {"name":"pair at the end",                "args":[[1,5,3,8], 11],  "expect":[2,3]},
+    {"name":"zeros, t=0",                     "args":[[0,4,3,0], 0],   "expect":[0,3]},
+    {"name":"no pair exists",                 "args":[[1,2,3], 100],   "expect":[]}
+  ]
+  </script>
+</div>
+
+<h3>Now look at what it wastes</h3>
+
+<p>Walk the brute force on <code>[3, 4, 5, 6]</code>, target 7. At
+<code>i = 0</code> you hold the value 3, and then you scan the rest of the array
+asking: <em>is there a 4 in here?</em></p>
+
+<p>Read that again, because it is the whole lesson. You are not really comparing
+pairs. For each element <code>x</code>, you are <strong>searching</strong> for one
+specific value — its <strong>complement</strong>, <code>target - x</code>. The
+inner loop is a linear search, and it runs n times.</p>
+
+<div class="callout warn">
+  <span class="callout-label">The move</span>
+  <p style="margin:0">Whenever an inner loop is searching for a
+  <em>known value</em>, replace it with a hash lookup. A linear scan is O(n); a
+  <code>Map</code> lookup is O(1). Doing that n times turns O(n²) into O(n). You
+  pay for it with O(n) memory — and trading space for time is the single most
+  common optimisation in interview problems.</p>
+</div>
+
+<p>One refinement makes it elegant. You do not need to build the map first and
+then search it. Walk the array once, and at each element ask whether its
+complement has <em>already been seen</em>. If yes, you have your pair. If no, put
+the current element in the map and move on. One pass, and it never pairs an
+element with itself — because you check the map <em>before</em> adding the
+current element.</p>
+
+<div class="exercise" data-exercise data-fn="twoSum">
+  <span class="ex-kicker">Exercise 2 · one pass</span>
+  <p class="ex-brief">Same contract, same tests. Use a <code>Map</code> from
+  <em>value</em> to <em>index</em>, and touch each element only once.</p>
+  <textarea class="ex-code">function twoSum(nums, target) {
+  const seen = new Map();   // value -> index
+  // For each element: has its complement been seen already?
+  // Check BEFORE inserting the current one.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>Loop <code>i</code> from 0. Compute
+    <code>const complement = target - nums[i]</code>. If
+    <code>seen.has(complement)</code>, return
+    <code>[seen.get(complement), i]</code> — the stored index comes first because
+    it was found earlier. Otherwise <code>seen.set(nums[i], i)</code>.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function twoSum(nums, target) {
+  const seen = new Map();
+  for (let i = 0; i &lt; nums.length; i++) {
+    const complement = target - nums[i];
+    if (seen.has(complement)) return [seen.get(complement), i];
+    seen.set(nums[i], i);
+  }
+  return [];
+}</code></pre>
+    <p>O(n) time, O(n) space. Check it against your Breaks line:
+    <code>[3,3]</code> works because when the second 3 arrives the first is
+    already stored — and an element can never match itself, because it is not in
+    the map yet when you look.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"your own example [3,4,5,6] t=7", "args":[[3,4,5,6], 7],   "expect":[0,1]},
+    {"name":"classic [2,7,11,15] t=9",        "args":[[2,7,11,15], 9], "expect":[0,1]},
+    {"name":"answer not at the front",        "args":[[3,2,4], 6],     "expect":[1,2]},
+    {"name":"your break case [3,3] t=6",      "args":[[3,3], 6],       "expect":[0,1]},
+    {"name":"pair at the end",                "args":[[1,5,3,8], 11],  "expect":[2,3]},
+    {"name":"zeros, t=0",                     "args":[[0,4,3,0], 0],   "expect":[0,3]},
+    {"name":"no pair exists",                 "args":[[1,2,3], 100],   "expect":[]}
+  ]
+  </script>
+</div>
+
+<table class="cmp2">
+  <thead><tr><th>Approach</th><th>Time</th><th>Space</th><th>At n = 1000</th></tr></thead>
+  <tbody>
+    <tr><td>Nested loops</td><td>O(n²)</td><td>O(1)</td><td>~10⁶ ops — fine</td></tr>
+    <tr><td>One pass + Map</td><td>O(n)</td><td>O(n)</td><td>~10³ ops — instant</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="num">The pattern</span>It is not about sums</h2>
+
+<p>What you just learned has a name and it is not "Two Sum." It is
+<strong>complement lookup</strong>: when you need to find whether a
+<em>specific value</em> exists in a collection, put the collection in a hash
+structure and ask directly, instead of scanning for it.</p>
+
+<p>The tell is always the same shape — <em>an inner loop searching for a value
+you can compute.</em> Once you can see that shape, a large family of problems
+collapses into the same three lines. Here it is again with no sums in
+sight.</p>
+
+<div class="exercise" data-exercise data-fn="hasPairWithSum">
+  <span class="ex-kicker">Exercise 3 · does it transfer?</span>
+  <p class="ex-brief">Return <code>true</code> or <code>false</code>: does
+  <em>any</em> pair sum to the target? You do not need the indices, only the
+  answer — so use a <code>Set</code>, not a <code>Map</code>.</p>
+  <textarea class="ex-code">function hasPairWithSum(nums, target) {
+  // Same shape as Exercise 2, but you only need to know IF,
+  // not WHERE. A Set is enough.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>Identical structure. <code>const seen = new Set()</code>. For each
+    <code>n</code>: if <code>seen.has(target - n)</code> return
+    <code>true</code>, else <code>seen.add(n)</code>. Return <code>false</code>
+    at the end. Checking before adding is still what stops an element matching
+    itself.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function hasPairWithSum(nums, target) {
+  const seen = new Set();
+  for (const n of nums) {
+    if (seen.has(target - n)) return true;
+    seen.add(n);
+  }
+  return false;
+}</code></pre>
+    <p>Five lines, and the skeleton is the same as Exercise 2. That sameness is
+    the point — you are no longer solving Two Sum, you are applying a pattern.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"pair exists",                "args":[[3,4,5,6], 7], "expect":true},
+    {"name":"no pair",                    "args":[[1,2,3], 100], "expect":false},
+    {"name":"equal pair [3,3] t=6",       "args":[[3,3], 6],     "expect":true},
+    {"name":"cannot reuse one element",   "args":[[5], 10],      "expect":false},
+    {"name":"empty array",                "args":[[], 0],        "expect":false},
+    {"name":"two zeros, t=0",             "args":[[0,0], 0],     "expect":true}
+  ]
+  </script>
+</div>
+
+<div class="callout">
+  <span class="callout-label">Note the fourth test</span>
+  <p><code>[5]</code> with target 10 must be <strong>false</strong>. 5 + 5 = 10,
+  but there is only one 5. Your code gets this right for free, purely because it
+  checks the set before adding — the same ordering that made <code>[3,3]</code>
+  work. That is the second half of the Breaks line you merged, and you never had
+  to write a special case for it.</p>
+</div>
+
+<hr class="dinkus">
+
+<h2><span class="num">Drill</span>Two checks</h2>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 1 of 2</span>
+  <p class="quiz-q">In the one-pass solution, why check the map <em>before</em>
+  inserting the current element?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="Insert first and an element can find itself: at [5] with target 10, 5 would already be stored and would match its own complement. Checking first makes reuse impossible without a special case.">Otherwise an element could match with itself.</button></li>
+    <li><button data-why="Order does not affect cost. Both are O(1) hash operations and both happen once per element either way, so the running time is identical.">Otherwise the lookup would become much slower.</button></li>
+    <li><button data-why="It does not overflow, and JavaScript Maps have no fixed size. The problem is a correctness one about which elements are visible, not a capacity one.">Otherwise the map would eventually overflow memory.</button></li>
+    <li><button data-why="The indices are still right either way — the stored one is always the earlier. The bug that ordering prevents is self-pairing, not a swapped return.">Otherwise the returned indices come out backwards.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 2 of 2</span>
+  <p class="quiz-q">An interviewer gives you a problem where
+  <code>nums.length &lt;= 100000</code>. What has the Bounds line already told
+  you?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="n squared is 10^10 there — far too slow. The bound rules out the nested loop before you write a character of it, which is thirty seconds spent to save ten minutes.">Nested loops are ruled out before writing them.</button></li>
+    <li><button data-why="Nothing about a size tells you which structure to use. It tells you which complexities are affordable; choosing the structure is the next question, not this one.">A hash map is definitely the right structure.</button></li>
+    <li><button data-why="Bounds constrain time and memory, not correctness. Your edge cases come from the Breaks line, and they do not change with input size.">The edge cases will need much more care.</button></li>
+    <li><button data-why="It is the opposite. A larger bound narrows your options, because more approaches become too slow to consider. Small bounds are the permissive ones.">More approaches are now open to you.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<p class="score" data-score>You have <b>0</b> of <b>0</b> correct.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Today's rep</span>Rewrite the contract, then use it</h2>
+
+<ol class="steps">
+  <li>
+    <h3>Repair your Two Sum contract</h3>
+    <p>All five lines this time. Give Trace its own line and
+    <strong>finish it</strong> — input and output. Split Breaks into the two
+    distinct cases. Add what happens when no pair exists. Five minutes.</p>
+  </li>
+  <li>
+    <h3>Take a new problem, contract only</h3>
+    <p>Something from Arrays &amp; Hashing you have not seen. Write the contract,
+    convert the Bounds line into a verdict about complexity, and stop before
+    solving. Same discipline as Lesson 1, now with the Bounds step actually
+    performed.</p>
+  </li>
+  <li>
+    <h3>Send both back</h3>
+    <p>Contracts are cheap to write and cheap for me to mark, and this is the
+    loop that is working. I will chase you for it from now on — that one is on
+    me.</p>
+  </li>
+</ol>
+
+<hr>
+
+<div class="colophon">
+
+  <h3>Read this next</h3>
+  <p><strong><a href="https://www.techinterviewhandbook.org/algorithms/hash-table/">Tech
+  Interview Handbook — Hash Table</a></strong>. Short. Yangshun Tay's per-topic
+  page covering when a hash table is the answer and the standard mistakes. Read
+  it against what you just wrote and notice how much of it you now already know.</p>
+
+  <h3>Sources for this lesson</h3>
+  <ul>
+    <li><a href="https://www.techinterviewhandbook.org/">Tech Interview Handbook</a> — interview technique and per-topic pages.</li>
+    <li><a href="https://neetcode.io/roadmap">NeetCode roadmap</a> — Arrays &amp; Hashing is the first topic in the dependency tree, for good reason.</li>
+    <li><a href="https://home.sandiego.edu/~pmyers/foursteps.htm">Pólya's four phases</a> — this lesson is phase two, <em>devise a plan</em>, done properly for the first time.</li>
+  </ul>
+
+  <h3>In this workspace</h3>
+  <ul>
+    <li><a href="../reference/patterns.html">Reference · Patterns</a> — new, starts with complement lookup</li>
+    <li><a href="../reference/problem-contract.html">Reference · The Problem Contract</a></li>
+    <li><a href="0002-insertion-sort.html">Lesson 2 — Insertion Sort</a></li>
+    <li>Lesson 4 — <em>merge sort</em>. Recursion carries the weight, and it is the first algorithm that beats O(n²).</li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>You were right to push.</strong> The contract was the point of Lesson
+    1 and I never asked for it back. If a lesson ends with work and I do not
+    chase it, chase me.
+  </div>
+
+</div>
+
+</div>
+<script src="../assets/widgets.js"></script>
+<script src="../assets/exercise.js"></script>
+</body>
+</html>

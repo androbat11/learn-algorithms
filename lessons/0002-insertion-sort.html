@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 · Insertion Sort</title>
+<link rel="stylesheet" href="../assets/course.css">
+<link rel="stylesheet" href="../assets/widgets.css">
+<link rel="stylesheet" href="../assets/exercise.css">
+<style>
+  .trace { font-family: var(--mono); font-size: 0.8rem; width: 100%;
+           border-collapse: collapse; margin: 1.6rem 0; }
+  .trace th, .trace td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--rule);
+           text-align: left; vertical-align: top; }
+  .trace th { font-family: var(--sans); font-size: 0.68rem; font-weight: 700;
+           letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+  .trace .sorted { color: var(--good); font-weight: 700; }
+  .trace .cursor { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="page anchor">
+
+<header class="masthead">
+  <p class="eyebrow">Lesson 02 · Sorting · TypeScript</p>
+  <h1>Insertion Sort</h1>
+  <p class="standfirst">You already know bubble sort. This is the one that
+  replaces it — and the first algorithm you will write with a sentence you can
+  check at every step.</p>
+  <p class="meta">≈25 minutes · TypeScript · Follows
+  <a href="0001-the-problem-contract.html">Lesson 1</a> · Card:
+  <a href="../reference/sorting.html">Sorting</a></p>
+</header>
+
+<div class="recall" data-recall>
+  <span class="recall-kicker">First · from memory</span>
+  <p class="recall-q">Before anything new. Write the five lines of the problem
+  contract from Lesson 1, in order. No scrolling.</p>
+  <textarea placeholder="1. …"></textarea>
+  <button class="btn">Check</button>
+  <div class="recall-answer" hidden>
+    <span class="verdict">Given · Goal · Bounds · Trace · Breaks</span>
+    <p>Slow is fine — slow retrieval is the kind that builds something. Wrong is
+    also fine, and more informative: the line you dropped is the line to watch.</p>
+  </div>
+</div>
+
+<p class="lede">Here is the thing nobody says out loud about bubble sort: it is
+not bad because it is slow. It is bad because you can write it correctly without
+ever being able to say <em>why</em> it works. You push big things rightward until
+nothing moves, it sorts, and you shrug.</p>
+
+<p>Insertion sort is the same complexity class and a far better teacher, because
+it comes with a sentence that is true at every step. That sentence is called a
+<strong>loop invariant</strong>, and it is the most useful tool there is for
+reasoning about code you have not run — which is exactly your situation at a
+whiteboard, and exactly what was missing when you froze.</p>
+
+<h2><span class="num">The idea</span>Sorting a hand of cards</h2>
+
+<p>You already know this algorithm; you have just never written it. It is how you
+sort a hand of playing cards. The cards on the left are in order. You pick up the
+next one and slide it leftward until it sits in the right place. Repeat until
+there are no cards left to pick up.</p>
+
+<p>The invariant is the promise that makes it work:</p>
+
+<div class="callout">
+  <span class="callout-label">The loop invariant</span>
+  <p style="margin:0"><strong>At the start of each pass, the first
+  <code>i</code> elements are sorted among themselves.</strong></p>
+</div>
+
+<p>There is a trap in that sentence, and it is worth slowing down for.
+<em>Sorted among themselves</em> is <strong>not</strong> the same as <em>in their
+final positions</em>. The element at index 0 can still be displaced later by
+something smaller arriving from the right. That distinction is the entire
+difference between insertion sort and selection sort, and it is a real interview
+question.<span class="sidenote">This is the standard CLRS treatment. An invariant
+is proved in three parts: <em>initialization</em> (true before the loop),
+<em>maintenance</em> (each pass preserves it), <em>termination</em> (when the
+loop ends it gives you what you wanted).
+<a href="https://ycpcs.github.io/cs360-spring2015/lectures/lecture02.html">CS360 —
+insertion sort and loop invariants</a>;
+<a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford
+CS161, Lecture 1</a> (PDF).</span></p>
+
+<p>Check the three parts yourself. <em>Initialization</em>: before the first
+pass, <code>i = 1</code> and one element is trivially sorted. <em>Maintenance</em>:
+each pass slides element <code>i</code> into the sorted region, making it one
+longer. <em>Termination</em>: the loop ends when <code>i</code> reaches the
+length — so all <code>n</code> elements are sorted among themselves, which, when
+it is all of them, does mean sorted.</p>
+
+<h3>Trace it by hand</h3>
+
+<p><code>[5, 2, 4, 1]</code>. Green is the sorted region, rust is the element
+being placed.</p>
+
+<table class="trace">
+  <thead><tr><th>Pass</th><th>Array</th><th>What happened</th></tr></thead>
+  <tbody>
+    <tr><td>start</td><td><span class="sorted">5</span> 2 4 1</td><td>one element — sorted by definition</td></tr>
+    <tr><td>i = 1</td><td><span class="sorted">2 5</span> 4 1</td><td><span class="cursor">2</span> slid past 5</td></tr>
+    <tr><td>i = 2</td><td><span class="sorted">2 4 5</span> 1</td><td><span class="cursor">4</span> slid past 5, stopped at 2</td></tr>
+    <tr><td>i = 3</td><td><span class="sorted">1 2 4 5</span></td><td><span class="cursor">1</span> slid all the way to the front</td></tr>
+  </tbody>
+</table>
+
+<p>Look closely at pass <code>i = 2</code>. The 4 compared against 5, moved,
+compared against 2, and <em>stopped</em>. It did not walk the whole array. That
+early stop is where insertion sort's real advantage lives, and you are going to
+measure it yourself in Exercise 3.</p>
+
+<h2><span class="num">The code</span>Eight lines</h2>
+
+<pre><code>function insertionSort(a: number[]): void {
+  for (let i = 1; i &lt; a.length; i++) {
+    let j = i;
+    while (j &gt; 0 &amp;&amp; a[j - 1] &gt; a[j]) {
+      [a[j - 1], a[j]] = [a[j], a[j - 1]];   // swap
+      j--;
+    }
+  }
+}</code></pre>
+
+<p>Three details worth naming, because each one is a decision:</p>
+
+<ul>
+  <li><code>i</code> starts at <strong>1</strong>, not 0. Element 0 is already a
+    sorted region of one, so there is nothing to do for it.</li>
+  <li>The guard is <code>j &gt; 0</code>, checked <em>before</em>
+    <code>a[j - 1]</code>. JavaScript short-circuits <code>&amp;&amp;</code>, so
+    <code>a[-1]</code> is never evaluated. Reverse those two conditions and you
+    get <code>undefined</code> comparisons instead of a crash — which is worse,
+    because it fails silently.</li>
+  <li>The comparison is <code>&gt;</code>, not <code>&gt;=</code>. That single
+    character is what makes this sort <strong>stable</strong>: equal elements
+    never swap past each other, so they keep their original relative order.</li>
+</ul>
+
+<p>Empty and single-element arrays need no special case. <code>a.length</code> is
+0 or 1, the loop never runs, and the array is returned untouched. Two of the
+<code>Breaks</code> from Lesson 1, handled by construction.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Exercises</span>Write it yourself</h2>
+
+<p>These run in the page. Write the function, press <strong>Run tests</strong>
+(or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>), and see immediately which cases pass. Type
+annotations are optional — paste TypeScript and it will strip them for you.</p>
+
+<p>Use the hint before the solution. Struggling for thirty seconds and then
+getting it is worth more than reading the answer, and it is the entire reason
+these are here rather than printed below the fold.</p>
+
+<div class="exercise" data-exercise data-fn="insertOne">
+  <span class="ex-kicker">Exercise 1 · the primitive</span>
+  <p class="ex-brief">Before the whole sort, build the piece it is made of.
+  Given an <strong>already sorted</strong> array and a value, return a new array
+  with the value inserted in the right place. Do not use
+  <code>.sort()</code>.</p>
+  <textarea class="ex-code">function insertOne(sorted, value) {
+  // Return a NEW array with `value` in its correct position.
+  // Hint: start from a copy, push the value on the end,
+  // then slide it left while it is smaller than its neighbour.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>Copy with <code>sorted.slice()</code>. Push <code>value</code> onto the
+    end — it is now at index <code>out.length - 1</code>. Then run exactly the
+    inner loop of insertion sort on it: while it is not at index 0 and the
+    element to its left is bigger, swap them and step left.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function insertOne(sorted, value) {
+  const out = sorted.slice();
+  out.push(value);
+  let i = out.length - 1;
+  while (i &gt; 0 &amp;&amp; out[i - 1] &gt; out[i]) {
+    [out[i - 1], out[i]] = [out[i], out[i - 1]];
+    i--;
+  }
+  return out;
+}</code></pre>
+    <p>That while loop <em>is</em> insertion sort's inner loop. You have already
+    written the hard half.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"into the middle",        "args":[[1,3,5], 4],  "expect":[1,3,4,5]},
+    {"name":"into an empty array",    "args":[[], 2],       "expect":[2]},
+    {"name":"smaller than everything","args":[[1,2,3], 0],  "expect":[0,1,2,3]},
+    {"name":"larger than everything", "args":[[1,2,3], 9],  "expect":[1,2,3,9]},
+    {"name":"duplicate value",        "args":[[2,2], 2],    "expect":[2,2,2]},
+    {"name":"negative numbers",       "args":[[-5,-1], -3], "expect":[-5,-3,-1]}
+  ]
+  </script>
+</div>
+
+<div class="exercise" data-exercise data-fn="insertionSort">
+  <span class="ex-kicker">Exercise 2 · the whole sort</span>
+  <p class="ex-brief">Now the real thing. Sort the array ascending,
+  <strong>in place</strong> — modify <code>a</code> itself rather than returning
+  a new array. No <code>.sort()</code>.</p>
+  <textarea class="ex-code">function insertionSort(a) {
+  // Sort `a` in place, ascending.
+  // The invariant: after pass i, the first i+1 elements
+  // are sorted among themselves.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>Outer loop from <code>i = 1</code> to <code>a.length - 1</code>. Inside,
+    set <code>let j = i</code> and run the same sliding loop you wrote in
+    Exercise 1 — but on <code>a</code> directly, with no copy and no
+    <code>return</code>. Guard with <code>j &gt; 0</code> <em>first</em>.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function insertionSort(a) {
+  for (let i = 1; i &lt; a.length; i++) {
+    let j = i;
+    while (j &gt; 0 &amp;&amp; a[j - 1] &gt; a[j]) {
+      [a[j - 1], a[j]] = [a[j], a[j - 1]];
+      j--;
+    }
+  }
+}</code></pre>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"mixed",           "args":[[5,2,4,1]],      "expect":[1,2,4,5],   "mutates":true},
+    {"name":"empty",           "args":[[]],             "expect":[],          "mutates":true},
+    {"name":"single element",  "args":[[42]],           "expect":[42],        "mutates":true},
+    {"name":"all identical",   "args":[[7,7,7]],        "expect":[7,7,7],     "mutates":true},
+    {"name":"reverse sorted",  "args":[[5,4,3,2,1]],    "expect":[1,2,3,4,5], "mutates":true},
+    {"name":"already sorted",  "args":[[1,2,3,4,5]],    "expect":[1,2,3,4,5], "mutates":true},
+    {"name":"negatives",       "args":[[-3,0,-7,5]],    "expect":[-7,-3,0,5], "mutates":true}
+  ]
+  </script>
+</div>
+
+<div class="exercise" data-exercise data-fn="countShifts">
+  <span class="ex-kicker">Exercise 3 · measure the claim</span>
+  <p class="ex-brief">Do not take my word that insertion sort is fast on
+  nearly-sorted input — measure it. Return the <strong>number of swaps</strong>
+  performed while sorting. Leave the caller's array untouched.</p>
+  <textarea class="ex-code">function countShifts(a) {
+  // Sort a COPY of `a`, counting every swap you perform.
+  // Return the count. Do not modify `a` itself.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>Take your Exercise 2 answer. Change the first line to
+    <code>const b = a.slice()</code>, sort <code>b</code> instead of
+    <code>a</code>, add <code>let count = 0</code> at the top, increment it
+    inside the while loop, and <code>return count</code>.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function countShifts(a) {
+  const b = a.slice();
+  let count = 0;
+  for (let i = 1; i &lt; b.length; i++) {
+    let j = i;
+    while (j &gt; 0 &amp;&amp; b[j - 1] &gt; b[j]) {
+      [b[j - 1], b[j]] = [b[j], b[j - 1]];
+      j--;
+      count++;
+    }
+  }
+  return count;
+}</code></pre>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"already sorted — zero work",   "args":[[1,2,3]],       "expect":0},
+    {"name":"longer, already sorted",       "args":[[1,2,3,4,5,6]], "expect":0},
+    {"name":"one pair out of order",        "args":[[2,1]],         "expect":1},
+    {"name":"one element out of place",     "args":[[1,3,2]],       "expect":1},
+    {"name":"reverse sorted, n=3",          "args":[[3,2,1]],       "expect":3},
+    {"name":"reverse sorted, n=4",          "args":[[4,3,2,1]],     "expect":6},
+    {"name":"empty",                        "args":[[]],            "expect":0}
+  ]
+  </script>
+</div>
+
+<div class="callout">
+  <span class="callout-label">Look at what you just proved</span>
+  <p>Two of those cases are the whole point. A sorted array of six elements costs
+  <strong>zero</strong> swaps. A reversed array of four costs <strong>six</strong>
+  — which is 4 × 3 ÷ 2, the number of pairs. That gap is the difference between
+  O(n) and O(n²), and you did not have to trust anybody about it. You ran it.</p>
+</div>
+
+<h2><span class="num">Why it matters</span>Adaptive and stable</h2>
+
+<p>Insertion sort is O(n²) in the worst case and you will hear it dismissed for
+that. But your Exercise 3 results are the counter-argument. On input that is
+already sorted, every inner loop fails its first test and the whole thing is
+O(n). Insertion sort is <strong>adaptive</strong>: the closer the input is to
+sorted, the faster it goes. Merge sort, which is next lesson, is not — it does
+the same work regardless.</p>
+
+<p>It is also <strong>stable</strong>, thanks to that <code>&gt;</code> instead
+of <code>&gt;=</code>. Stability matters the moment you sort records rather than
+numbers: sort by name, then by department, and a stable sort leaves each
+department's names still in order.</p>
+
+<p>These two properties are why insertion sort is not a museum piece. Real
+sorting implementations are hybrids that switch to it for small or nearly-sorted
+runs — including Rust's standard library, which hands off to an insertion sort
+below a small-length threshold.<span class="sidenote">Rust std source:
+<a href="https://doc.rust-lang.org/src/core/slice/sort/shared/smallsort.rs.html"><code>insertion_sort_shift_left</code></a>,
+used below <code>SMALL_SORT_FALLBACK_THRESHOLD</code>. Filed away for when you
+port all of this — a
+<a href="deferred-rust/insertion-sort-rust.html">Rust version of this lesson</a>
+is already written and waiting.</span></p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Drill</span>Two checks</h2>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 1 of 2</span>
+  <p class="quiz-q">At the start of each pass of insertion sort, what is
+  guaranteed?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="Sorted relative to each other — but not necessarily where they finally end up. A smaller element arriving later displaces every one of them, exactly as the 1 does in the trace above.">the first i elements are sorted among themselves</button></li>
+    <li><button data-why="This is selection sort's invariant, and the difference is the whole point. Selection sort picks the true minimum each pass, so its prefix really is final. Insertion sort's prefix is provisional.">the first i elements sit in final positions</button></li>
+    <li><button data-why="That is bubble sort's invariant — the one you already know. It grows a sorted region at the END from the largest elements. Insertion sort grows one at the FRONT and claims nothing about magnitude.">the largest i elements have reached the end</button></li>
+    <li><button data-why="Splitting into halves is merge sort, which is Lesson 3. Insertion sort never divides anything — it grows one region by one element per pass.">the array has been split into two halves</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 2 of 2</span>
+  <p class="quiz-q">You change the comparison from <code>a[j-1] &gt; a[j]</code>
+  to <code>a[j-1] &gt;= a[j]</code>. What breaks?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="Equal elements now swap past each other, so records that compare equal come out in a different order than they went in. The array is still correctly sorted — which is exactly why this bug survives testing on plain numbers and only surfaces on real data.">It stops being stable, but still sorts.</button></li>
+    <li><button data-why="It does not. Both versions terminate: j strictly decreases every iteration and the j > 0 guard stops it. Swapping equal elements is wasted work, never an infinite loop.">It loops forever on repeated values.</button></li>
+    <li><button data-why="The output is still correctly ordered. That is the trap — a stability bug produces a right-looking answer, so tests on bare numbers pass and the defect ships.">It sorts wrongly when duplicates exist.</button></li>
+    <li><button data-why="Nothing about the guard changes. j > 0 is still checked first and still short-circuits, so a[-1] is never touched. The index is safe either way.">It reads past the start of the array.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<p class="score" data-score>You have <b>0</b> of <b>0</b> correct.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Today's rep</span>Five minutes, away from this page</h2>
+
+<ol class="steps">
+  <li>
+    <h3>Write it once more, cold</h3>
+    <p>New file, blank editor, no scrolling back. <code>insertionSort</code> from
+    nothing. If you stall, write the invariant sentence as a comment and derive
+    the loop from it — that is the technique, not a workaround.</p>
+  </li>
+  <li>
+    <h3>Then change one thing</h3>
+    <p>Make it sort <em>descending</em>. It is a one-character edit. Predict
+    which character before you try it, then check whether you were right.</p>
+  </li>
+  <li>
+    <h3>Bring back what fought you</h3>
+    <p>Which exercise took longest? Which test failed first? That is the most
+    useful thing you can hand me — it tells me where the next lesson should
+    start.</p>
+  </li>
+</ol>
+
+<hr>
+
+<div class="colophon">
+
+  <h3>Read this next</h3>
+  <p><strong><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford
+  CS161, Lecture 1</a></strong> (PDF, ~10 pages). Insertion sort and the
+  loop-invariant proof done properly, from a university course rather than a
+  blog. Read as far as the invariant argument and stop — the asymptotics can wait
+  for Lesson 4.</p>
+
+  <h3>Sources for this lesson</h3>
+  <ul>
+    <li><a href="https://ycpcs.github.io/cs360-spring2015/lectures/lecture02.html">CS360 — Insertion Sort and loop invariants</a> — the CLRS Chapter 2 treatment: initialization, maintenance, termination.</li>
+    <li><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford CS161, Lecture 1</a> (PDF) — the same proof, more formally.</li>
+    <li><a href="https://doc.rust-lang.org/src/core/slice/sort/shared/smallsort.rs.html">Rust std source — <code>smallsort.rs</code></a> — insertion sort as production code, for later.</li>
+  </ul>
+
+  <h3>In this workspace</h3>
+  <ul>
+    <li><a href="../reference/sorting.html">Reference · Sorting</a> — grows with each sort</li>
+    <li><a href="../reference/problem-contract.html">Reference · The Problem Contract</a></li>
+    <li><a href="0001-the-problem-contract.html">Lesson 1 — The Problem Contract</a></li>
+    <li>Lesson 3 — <em>merge sort</em>. The first algorithm where recursion carries the weight, and the first that beats O(n²).</li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>Your teacher is one message away.</strong> If an exercise fought you,
+    paste what you wrote and the failing case. If you think a drill answer is
+    wrong, argue it — the plan has already improved twice because you pushed
+    back on something I assumed.
+  </div>
+
+</div>
+
+</div>
+<script src="../assets/widgets.js"></script>
+<script src="../assets/exercise.js"></script>
+</body>
+</html>

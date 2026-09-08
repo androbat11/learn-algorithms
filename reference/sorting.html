@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · Sorting</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  table.cmp { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.87rem; }
+  table.cmp th, table.cmp td { text-align: left; padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.cmp th { font-family: var(--sans); font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+  table.cmp td.algo { font-family: var(--sans); font-weight: 600; font-size: 0.85rem; }
+  table.cmp code { font-size: 0.8rem; }
+  .pending { opacity: 0.5; font-style: italic; }
+  .trap { border-left: 3px solid var(--bad); background: var(--paper-sunk);
+    border-radius: 3px; padding: 1rem 1.2rem; margin: 1.6rem 0; }
+  .trap-label { font-family: var(--sans); font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.11em; text-transform: uppercase; color: var(--bad);
+    display: block; margin-bottom: 0.45rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <p class="eyebrow">Reference Card</p>
+  <h1>Sorting</h1>
+  <p class="standfirst">Every sort you have built, with its invariant, its
+  complexity, and the code that makes it work. Grows one row at a time.</p>
+  <p class="meta">Algorithms workspace · TypeScript ·
+  Last updated after <a href="../lessons/0004-merge-sort.html">Lesson 4</a></p>
+</header>
+
+<h2>At a glance</h2>
+
+<table class="cmp">
+  <thead>
+    <tr><th>Algorithm</th><th>Best</th><th>Worst</th><th>Space</th><th>Stable</th><th>Adaptive</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="algo">Bubble sort</td>
+      <td>O(n)*</td><td>O(n²)</td><td>O(1)</td><td>Yes</td><td>Only if early-exit</td>
+    </tr>
+    <tr>
+      <td class="algo">Insertion sort</td>
+      <td>O(n)</td><td>O(n²)</td><td>O(1)</td><td>Yes</td><td><strong>Yes</strong></td>
+    </tr>
+    <tr>
+      <td class="algo">Merge sort</td>
+      <td>O(n log n)</td><td>O(n log n)</td><td><strong>O(n)</strong></td><td>Yes</td><td><strong>No</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="font-size:0.85rem;color:var(--ink-soft)">* Only with a
+"did I swap anything this pass?" flag. Without it, bubble sort is O(n²) even on
+sorted input — which is one reason insertion sort is the better default.</p>
+
+<h2>Insertion sort</h2>
+
+<p><strong>Invariant.</strong> At the start of each iteration of the outer loop,
+the first <code>i</code> elements are sorted <em>among themselves</em> — not
+necessarily in their final positions.</p>
+
+<p><strong>Shape.</strong> Grow a sorted region at the front, one element per
+pass, sliding each new element leftward until it fits.</p>
+
+<pre><code>function insertionSort(a: number[]): void {
+  for (let i = 1; i &lt; a.length; i++) {
+    let j = i;
+    while (j &gt; 0 &amp;&amp; a[j - 1] &gt; a[j]) {
+      [a[j - 1], a[j]] = [a[j], a[j - 1]];
+      j--;
+    }
+  }
+}</code></pre>
+
+<p><strong>Why it is worth knowing.</strong> Adaptive — O(n) on already-sorted
+input, because every inner loop exits on its first comparison. Stable, because
+the guard is <code>&gt;</code> rather than <code>&gt;=</code>. Real sorting
+implementations are hybrids that switch to insertion sort for small or
+nearly-sorted runs, including Rust's standard library
+(<a href="https://doc.rust-lang.org/src/core/slice/sort/shared/smallsort.rs.html"><code>insertion_sort_shift_left</code></a>).</p>
+
+<p><strong>Measured.</strong> Swap counts from Lesson 2, Exercise 3:
+<code>[1,2,3,4,5,6]</code> costs <strong>0</strong> swaps;
+<code>[4,3,2,1]</code> costs <strong>6</strong>, which is n(n−1)/2. That gap is
+O(n) against O(n²), and you produced both numbers yourself.</p>
+
+<div class="trap">
+  <span class="trap-label">The two traps</span>
+  <p style="margin:0 0 0.6rem"><strong>1 · Guard order.</strong> Write
+  <code>j &gt; 0 &amp;&amp; a[j-1] &gt; a[j]</code>, never the reverse.
+  <code>&amp;&amp;</code> short-circuits, so <code>a[-1]</code> is never
+  evaluated. Flip them and JavaScript quietly compares against
+  <code>undefined</code> instead of crashing — a silent wrong answer, which is
+  worse than a loud one.</p>
+  <p style="margin:0"><strong>2 · <code>&gt;</code> versus <code>&gt;=</code>.</strong>
+  Using <code>&gt;=</code> still sorts correctly, so tests on plain numbers pass.
+  But equal elements now swap past each other and the sort is no longer
+  <em>stable</em>. The bug only appears on records, in production.</p>
+</div>
+
+<h2>Merge sort</h2>
+
+<p><strong>Key idea.</strong> Merging two already-sorted arrays is the algorithm.
+The recursion is four lines of bookkeeping on top. Write <code>merge</code> first
+and the rest follows.</p>
+
+<p><strong>Shape.</strong> Split until each piece has one element, then merge
+back up. Nothing is compared on the way down; all the work is on the way up.</p>
+
+<pre><code>function merge(left: number[], right: number[]): number[] {
+  const out: number[] = [];
+  let i = 0, j = 0;
+  while (i &lt; left.length &amp;&amp; j &lt; right.length) {
+    if (left[i] &lt;= right[j]) out.push(left[i++]);
+    else                     out.push(right[j++]);
+  }
+  while (i &lt; left.length)  out.push(left[i++]);
+  while (j &lt; right.length) out.push(right[j++]);
+  return out;
+}
+
+function mergeSort(a: number[]): number[] {
+  if (a.length &lt;= 1) return a.slice();        // base case — do not omit
+  const mid = Math.floor(a.length / 2);
+  return merge(mergeSort(a.slice(0, mid)), mergeSort(a.slice(mid)));
+}</code></pre>
+
+<p><strong>Why O(n log n).</strong> Halving until you reach 1 gives log₂ n
+levels; each level touches all n elements once while merging. Multiply.</p>
+
+<div class="trap">
+  <span class="trap-label">The traps</span>
+  <p style="margin:0 0 0.6rem"><strong>1 · The base case.</strong> Omit
+  <code>if (a.length &lt;= 1)</code> and the recursion never terminates — a
+  one-element array keeps splitting into itself. Stack overflow, not a wrong
+  answer.</p>
+  <p style="margin:0 0 0.6rem"><strong>2 · <code>&lt;=</code> in the merge.</strong>
+  Using <code>&lt;</code> takes from the right half when elements are equal,
+  which breaks stability. Same one-character issue as insertion sort.</p>
+  <p style="margin:0"><strong>3 · Return <code>a.slice()</code>, not
+  <code>a</code>.</strong> Returning the original leaks a reference the caller
+  can mutate.</p>
+</div>
+
+<h2>Choosing between them</h2>
+
+<p>Measured comparison counts, from Lesson 2 Exercise 3 and Lesson 4 Exercise 3:</p>
+
+<table class="cmp">
+  <thead><tr><th>Input</th><th>Merge sort<br>comparisons</th><th>Insertion sort<br>swaps</th></tr></thead>
+  <tbody>
+    <tr><td><code>[1,2,3,4]</code> sorted</td><td>4</td><td>0</td></tr>
+    <tr><td><code>[4,3,2,1]</code> reversed</td><td>4</td><td>6</td></tr>
+    <tr><td><code>[1..8]</code> sorted</td><td>12</td><td>0</td></tr>
+    <tr><td><code>[8..1]</code> reversed</td><td>12</td><td>28</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Merge sort's column does not move.</strong> It is not adaptive — the
+shape of the input never changes what it does. <strong>Insertion sort's
+does</strong>, dramatically, in both directions.</p>
+
+<dl class="contract">
+  <div class="contract-row">
+    <dt>Use insertion</dt>
+    <dd>Small inputs, or data that is already nearly sorted. O(1) space.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Use merge</dt>
+    <dd>Large inputs where worst-case behaviour matters, or when you need a
+    guaranteed O(n log n) and can afford O(n) memory.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Real libraries</dt>
+    <dd>Use both — O(n log n) for the bulk, falling back to insertion sort on
+    small or nearly-sorted runs.</dd>
+  </div>
+</dl>
+
+<h2>Proving a sort correct — the three-part invariant</h2>
+
+<p>The standard CLRS structure. Worth being able to recite in an interview,
+because it is the vocabulary for "why is this right?"</p>
+
+<dl class="contract">
+  <div class="contract-row">
+    <dt>Initialization</dt>
+    <dd>The invariant is true before the loop starts. <em>Insertion sort: one
+    element is trivially sorted.</em></dd>
+  </div>
+  <div class="contract-row">
+    <dt>Maintenance</dt>
+    <dd>If it is true at the start of a pass, it is true at the start of the
+    next. <em>Insertion sort: the pass slides element <code>i</code> into place,
+    so the sorted region grows by one.</em></dd>
+  </div>
+  <div class="contract-row">
+    <dt>Termination</dt>
+    <dd>When the loop ends, the invariant gives you the result you wanted.
+    <em>Insertion sort: <code>i</code> reaches <code>n</code>, so all
+    <code>n</code> are sorted among themselves — which is sorted.</em></dd>
+  </div>
+</dl>
+
+<h2>Vocabulary</h2>
+
+<dl class="contract">
+  <div class="contract-row">
+    <dt>Stable</dt>
+    <dd>Equal elements keep their original relative order. Matters when sorting
+    records by one field after another.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Adaptive</dt>
+    <dd>Runs faster on input that is already partly sorted. Insertion sort is;
+    merge sort is not.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>In place</dt>
+    <dd>Uses O(1) extra space beyond the input. Insertion sort is; the usual
+    merge sort is not.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Invariant</dt>
+    <dd>A statement that is true at the start of every loop iteration. The tool
+    for reasoning about code you have not run.</dd>
+  </div>
+</dl>
+
+<hr class="dinkus">
+
+<div class="colophon">
+  <h3>Sources</h3>
+  <ul>
+    <li><a href="https://ycpcs.github.io/cs360-spring2015/lectures/lecture02.html">CS360 — Insertion Sort and loop invariants</a> (CLRS Ch. 2)</li>
+    <li><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford CS161, Lecture 1</a> (PDF)</li>
+    <li><a href="https://doc.rust-lang.org/src/core/slice/sort/shared/smallsort.rs.html">Rust std — <code>smallsort.rs</code></a></li>
+    <li><a href="https://github.com/Voultapher/sort-research-rs/blob/main/writeup/driftsort_introduction/text.md">Driftsort design writeup</a></li>
+  </ul>
+
+  <h3>Related</h3>
+  <ul>
+    <li><a href="../lessons/0002-insertion-sort.html">Lesson 2 — Insertion Sort</a></li>
+    <li><a href="../lessons/0004-merge-sort.html">Lesson 4 — Merge Sort</a></li>
+    <li><a href="complexity.html">Reference · Complexity</a> — where these numbers come from</li>
+    <li><a href="problem-contract.html">Reference · The Problem Contract</a></li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>This card grows.</strong> Two sorts down. The comparison table is the
+    point — the sorts only make sense against each other, and the numbers in it
+    are ones you produced yourself.
+  </div>
+</div>
+
+</div>
+</body>
+</html>

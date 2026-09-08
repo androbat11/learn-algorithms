@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5 · Complexity</title>
+<link rel="stylesheet" href="../assets/course.css">
+<link rel="stylesheet" href="../assets/widgets.css">
+<link rel="stylesheet" href="../assets/exercise.css">
+<style>
+  table.shapes { width:100%; border-collapse:collapse; margin:1.6rem 0; font-size:0.87rem; }
+  table.shapes th, table.shapes td { text-align:left; padding:0.55rem 0.7rem;
+    border-bottom:1px solid var(--rule); vertical-align:top; }
+  table.shapes th { font-family:var(--sans); font-size:0.68rem; font-weight:700;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--accent); }
+  table.shapes td.big { font-family:var(--mono); font-weight:700; white-space:nowrap; }
+  table.shapes td.num { font-family:var(--mono); text-align:right; white-space:nowrap; }
+  table.shapes tr.danger td.big, table.shapes tr.danger td.num { color:var(--bad); }
+  table.shapes tr.fine td.big, table.shapes tr.fine td.num { color:var(--good); }
+  .trap { border-left:3px solid var(--bad); background:var(--paper-sunk);
+    border-radius:3px; padding:1rem 1.2rem; margin:1.7rem 0; }
+  .trap-label { font-family:var(--sans); font-size:0.68rem; font-weight:700;
+    letter-spacing:0.11em; text-transform:uppercase; color:var(--bad);
+    display:block; margin-bottom:0.45rem; }
+  .ladder { font-family:var(--mono); font-size:0.8rem; line-height:1.9;
+    background:var(--paper-sunk); border:1px solid var(--rule); border-radius:3px;
+    padding:1.1rem 1.3rem; margin:1.6rem 0; overflow-x:auto; }
+  .ladder .lbl { color:var(--ink-faint); }
+  .ladder .hot { color:var(--bad); font-weight:700; }
+  .ladder .cool { color:var(--good); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="page anchor">
+
+<header class="masthead">
+  <p class="eyebrow">Lesson 05 · Foundations · TypeScript</p>
+  <h1>Complexity</h1>
+  <p class="standfirst">You have been quoting Big-O for four lessons. Now you
+  learn to read it off the shape of the code in about three seconds — and, more
+  usefully, to run it backwards: from the constraint line to the solution you are
+  allowed to write.</p>
+  <p class="meta">≈22 minutes · TypeScript · Follows
+  <a href="0004-merge-sort.html">Lesson 4</a> · Card:
+  <a href="../reference/complexity.html">Complexity</a></p>
+</header>
+
+<div class="exercise" data-exercise data-fn="merge">
+  <span class="ex-kicker">First · the rep you owe, cold</span>
+  <p class="ex-brief">Yesterday's rep was <code>merge</code> from a blank file.
+  Here is the blank file. Two <strong>already-sorted</strong> arrays in, one
+  sorted array out. No <code>.sort()</code>, no mutation of the inputs, no
+  scrolling back to Lesson 4 — a wrong answer you then fix is worth more than a
+  right answer you copied.</p>
+  <textarea class="ex-code">function merge(left, right) {
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <p>Two indices, <code>i</code> into <code>left</code> and <code>j</code> into
+    <code>right</code>. While <em>both</em> still have elements, push the smaller
+    and advance only that index. When the <code>while</code> ends, exactly one
+    array has leftovers — append the rest of both, since one of the two appends
+    does nothing.</p>
+  </div>
+  <div class="ex-answer" hidden>
+<pre><code>function merge(left, right) {
+  const out = [];
+  let i = 0, j = 0;
+  while (i &lt; left.length &amp;&amp; j &lt; right.length) {
+    if (left[i] &lt;= right[j]) out.push(left[i++]);
+    else                     out.push(right[j++]);
+  }
+  while (i &lt; left.length)  out.push(left[i++]);
+  while (j &lt; right.length) out.push(right[j++]);
+  return out;
+}</code></pre>
+    <p><code>&lt;=</code> rather than <code>&lt;</code> is what makes merge sort
+    stable: on a tie the left element goes first, so equal elements keep their
+    original order.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+    [
+      {"name":"interleaved",   "args":[[1,3,5],[2,4,6]],     "expect":[1,2,3,4,5,6]},
+      {"name":"uneven lengths","args":[[1,2],[3,4,5,6]],     "expect":[1,2,3,4,5,6]},
+      {"name":"all of left first","args":[[1,2,3],[8,9]],    "expect":[1,2,3,8,9]},
+      {"name":"duplicates",    "args":[[2,2,4],[1,2,5]],     "expect":[1,2,2,2,4,5]},
+      {"name":"left empty",    "args":[[],[1,2,3]],          "expect":[1,2,3]},
+      {"name":"both empty",    "args":[[],[]],               "expect":[]}
+    ]
+  </script>
+</div>
+
+<p class="lede">There are two complexity skills and only one of them gets taught.
+The first is reading Big-O off code you are looking at. The second is reading it
+off a constraint line <em>before you have written anything</em> — and that one is
+the reason this lesson exists, because it is the fix for freezing at a blank
+editor. A bound tells you which family of solutions is permitted. That is a much
+smaller room to search than "all possible algorithms."</p>
+
+<h2><span class="num">Part one</span>Reading it off the code</h2>
+
+<p>Big-O is not something you derive. It is a shape you recognise, and there are
+about nine shapes. Four steps, every time:</p>
+
+<ol class="steps">
+  <li>
+    <h3>Find the innermost line that does real work</h3>
+    <p>A comparison, a swap, a hash lookup. Ignore the loop headers, the
+    declarations, the early returns.</p>
+  </li>
+  <li>
+    <h3>Count how many times it runs, in terms of n</h3>
+    <p>Roughly. You want the shape, not the number.</p>
+  </li>
+  <li>
+    <h3>Drop constants and lower-order terms</h3>
+    <p><code>3n² + 90n + 7</code> is O(n²). Not approximately — exactly, by
+    definition.</p>
+  </li>
+  <li>
+    <h3>Add the hidden loops</h3>
+    <p>This is the step people skip, and it is where most wrong answers come
+    from. Every call inside your loop carries its own cost.</p>
+  </li>
+</ol>
+
+<p>The shapes themselves, with where you have already met each one:</p>
+
+<table class="shapes">
+  <thead>
+    <tr><th style="width:8.5rem">Complexity</th><th>The shape</th><th style="width:11rem">You have seen it in</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="big">O(1)</td><td>No loop over the input at all.</td><td><code>map.get(k)</code></td></tr>
+    <tr><td class="big">O(log n)</td><td>One loop, and the range <strong>halves</strong> each pass.</td><td>Binary search</td></tr>
+    <tr><td class="big">O(n)</td><td>One loop over the input. Or several loops <strong>one after another</strong>.</td><td><code>merge</code>, above</td></tr>
+    <tr><td class="big">O(n log n)</td><td>Split in half, recurse on both, do <strong>linear</strong> work to combine.</td><td>Merge sort</td></tr>
+    <tr><td class="big">O(n²)</td><td>Two nested loops over the input.</td><td>Insertion sort</td></tr>
+    <tr><td class="big">O(n · m)</td><td>Two nested loops over <strong>two different</strong> inputs.</td><td>—</td></tr>
+    <tr><td class="big">O(n³)</td><td>Three nested loops over the input.</td><td>—</td></tr>
+    <tr><td class="big">O(2ⁿ)</td><td>Recursion branching twice, <strong>without</strong> halving the problem.</td><td>—</td></tr>
+    <tr><td class="big">O(n!)</td><td>Every remaining element tried at every position.</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<p>Two of those need care, and both of them you have already written.</p>
+
+<h3>Care one: sequential loops add, nested loops multiply</h3>
+
+<p>This single distinction settles most complexity arguments. Two loops one after
+another is O(n + n) = O(n). One loop inside another is O(n × n) = O(n²). Merge
+sort's <code>merge</code> has <em>three</em> <code>while</code> loops and is
+O(n), because they run in sequence and between them they touch each element once.
+Three loops, linear.<span class="sidenote">Which is why "how many loops are
+there?" is the wrong question and "are they nested?" is the right one. Counting
+loops is how people talk themselves into O(n³) on linear code.</span></p>
+
+<h3>Care two: the triangular loop is still quadratic</h3>
+
+<p>Insertion sort's inner loop does not run n times. It walks back over the
+sorted prefix, so on pass <code>i</code> it does at most <code>i</code>
+comparisons. Total: <code>1 + 2 + … + (n−1)</code>, which is
+<code>n(n−1)/2</code>. Half of n². So is it O(n) — the average pass being n/2 —
+or O(n²)?</p>
+
+<p>Do not take my word for it. Instrument it.</p>
+
+<div class="exercise" data-exercise data-fn="triCount">
+  <span class="ex-kicker">Exercise 2 · measure the claim</span>
+  <p class="ex-brief">Write the triangular nested loop — outer <code>i</code> from
+  <code>0</code> to <code>n−1</code>, inner <code>j</code> from <code>0</code> to
+  <code>i−1</code> — and return <strong>the exact number of times the inner body
+  runs</strong>. This is insertion sort's comparison count in the worst case,
+  with the sorting removed.</p>
+  <textarea class="ex-code">function triCount(n) {
+  let ops = 0;
+
+  return ops;
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <p>Outer loop <code>i</code> from <code>0</code> while <code>i &lt; n</code>.
+    Inner loop <code>j</code> from <code>0</code> while <code>j &lt; i</code> —
+    note <code>i</code>, not <code>n</code>. Increment <code>ops</code> inside the
+    inner loop. On the first outer pass the inner loop runs zero times, which is
+    correct and is why <code>triCount(1)</code> is <code>0</code>.</p>
+  </div>
+  <div class="ex-answer" hidden>
+<pre><code>function triCount(n) {
+  let ops = 0;
+  for (let i = 0; i &lt; n; i++) {
+    for (let j = 0; j &lt; i; j++) {
+      ops++;
+    }
+  }
+  return ops;
+}</code></pre>
+  </div>
+  <script type="application/json" class="ex-tests">
+    [
+      {"name":"n = 1",     "args":[1],    "expect":0},
+      {"name":"n = 4",     "args":[4],    "expect":6},
+      {"name":"n = 10",    "args":[10],   "expect":45},
+      {"name":"n = 100",   "args":[100],  "expect":4950},
+      {"name":"n = 1000",  "args":[1000], "expect":499500}
+    ]
+  </script>
+</div>
+
+<p>Now read the numbers you just produced against n²:</p>
+
+<div class="ladder">
+<span class="lbl">n        n²           actual       ratio</span>
+10       100          45           0.450
+100      10,000       4,950        0.495
+1000     1,000,000    499,500      <span class="hot">0.4995</span>
+</div>
+
+<p>The ratio is converging on exactly ½, and it will never move again. That is
+what "O(n²) with a constant factor of a half" looks like when you measure it
+instead of asserting it.</p>
+
+<div class="trap">
+  <span class="trap-label">Why the half does not rescue you</span>
+  <p style="margin:0 0 0.6rem">Halving the work is real. 499,500 comparisons
+  genuinely beat 1,000,000, and on a nearly-sorted array insertion sort does
+  better still — you measured that in Lesson 2. None of it changes the
+  complexity, because <strong>Big-O answers exactly one question: what happens
+  when n doubles?</strong></p>
+  <p style="margin:0">Double n from 1,000 to 2,000 and the count goes from
+  499,500 to 1,999,000 — four times the work, both before and after the ½. The
+  constant cancels out of the only question being asked. That is not the notation
+  being sloppy; that is the notation being <em>about</em> something.</p>
+</div>
+
+<h3>Care three, the one that is specific to JavaScript</h3>
+
+<p>Step 4 — <em>add the hidden loops</em> — matters more in TypeScript than in
+most languages, because the standard library hides linear work behind
+single-token method calls. All of these are loops:</p>
+
+<table class="shapes">
+  <thead>
+    <tr><th style="width:14rem">Looks like one operation</th><th style="width:7rem">Actually</th><th>Because</th></tr>
+  </thead>
+  <tbody>
+    <tr class="danger"><td><code>arr.includes(x)</code></td><td class="big">O(n)</td><td>Linear scan of the array.</td></tr>
+    <tr class="danger"><td><code>arr.indexOf(x)</code></td><td class="big">O(n)</td><td>Same scan, returning a position.</td></tr>
+    <tr class="danger"><td><code>arr.shift()</code></td><td class="big">O(n)</td><td>Every remaining element moves down one index.</td></tr>
+    <tr class="danger"><td><code>arr.slice()</code>, <code>[...arr]</code></td><td class="big">O(n)</td><td>Copies, and allocates the copy.</td></tr>
+    <tr class="danger"><td><code>s += x</code> in a loop</td><td class="big">O(n²)</td><td>Strings are immutable; each <code>+=</code> copies the whole string.</td></tr>
+    <tr class="fine"><td><code>map.get</code> / <code>set.has</code></td><td class="big">O(1)*</td><td>Hashing. This is why Two Sum works.</td></tr>
+    <tr class="fine"><td><code>arr.push</code> / <code>arr.pop</code></td><td class="big">O(1)*</td><td>At the end, nothing needs to move.</td></tr>
+  </tbody>
+</table>
+
+<p style="font-size:0.85rem;color:var(--ink-soft)">* Average and amortised
+respectively. Say the qualifier out loud in an interview — it is the difference
+between having memorised a table and understanding it.</p>
+
+<p><code>arr.includes(x)</code> inside a loop over <code>arr</code> is two nested
+loops wearing one line of code, and it is the single most common way a candidate
+writes O(n²) while believing they wrote O(n).</p>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 1 of 3</span>
+  <p class="quiz-q">What is the time complexity of this function?</p>
+  <pre><code>function hasDuplicate(arr) {
+  for (const x of arr) {
+    if (arr.indexOf(x) !== arr.lastIndexOf(x)) return true;
+  }
+  return false;
+}</code></pre>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="One loop over n, and inside it two linear scans. Sequential scans add — so each pass costs 2n — but the pass itself is nested inside the loop, so the total multiplies: n × 2n = O(n²). Step 4 of the procedure is the whole question here.">O(n²) — indexOf hides a loop</button></li>
+    <li><button data-why="There is one visible loop, which is exactly the trap. indexOf and lastIndexOf each scan the whole array, so the body is not constant-time — it is linear, nested inside a linear loop.">O(n) — one loop, one pass</button></li>
+    <li><button data-why="The early return helps on inputs that happen to have an early duplicate, but Big-O describes the worst case: an array with no duplicates at all, which runs every pass to completion.">O(1) — the return exits early</button></li>
+    <li><button data-why="Close reasoning, wrong conclusion. The two scans sit side by side in the loop body, not inside one another. Sequential work adds — 2n — rather than multiplying to n².">O(n³) — two scans nest inside</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 2 of 3</span>
+  <p class="quiz-q">The inner loop below is bounded by <code>i</code>, not by
+  <code>n</code>. What is the complexity, and what did you just measure?</p>
+  <pre><code>for (let i = 0; i &lt; n; i++)
+  for (let j = 0; j &lt; i; j++)
+    work();</code></pre>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="n(n−1)/2 operations, and you measured the ratio converging on 0.4995. Big-O deletes the ½ because doubling n still quadruples the work.">Still O(n²); a ½ constant vanishes</button></li>
+    <li><button data-why="The average pass really is about n/2 iterations — but there are n passes, and n passes of n/2 work is n²/2, not n. Averaging the inner loop does not remove the outer one.">Now O(n); each pass averages n/2</button></li>
+    <li><button data-why="Two nested loops, not three. The bound on the inner loop makes the count smaller than n², never larger.">Now O(n³); the loops compound upward</button></li>
+    <li><button data-why="The count depends only on n, not on the contents — triCount(1000) is 499500 for every possible input. This shape has no best or worst case.">Undefined; the bound depends on data</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<hr class="dinkus">
+
+<h2><span class="num">Part two</span>The log, measured</h2>
+
+<p>O(log n) is the one shape that is genuinely hard to feel, because the numbers
+are absurd and reciting them does not help. So produce them.</p>
+
+<div class="exercise" data-exercise data-fn="halvings">
+  <span class="ex-kicker">Exercise 3 · measure the log</span>
+  <p class="ex-brief">Return how many times you can halve <code>n</code> —
+  rounding <em>down</em> each time — before it reaches <code>1</code>. This is
+  the number of comparisons binary search makes, and the depth of merge sort's
+  recursion tree.</p>
+  <textarea class="ex-code">function halvings(n) {
+  let steps = 0;
+
+  return steps;
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <p>A <code>while</code> loop that continues while <code>n &gt; 1</code>. Inside
+    it, <code>n = Math.floor(n / 2)</code> and <code>steps++</code>. Nothing
+    else. If <code>n</code> starts at <code>1</code> the loop never runs, which is
+    the correct answer of <code>0</code>.</p>
+  </div>
+  <div class="ex-answer" hidden>
+<pre><code>function halvings(n) {
+  let steps = 0;
+  while (n &gt; 1) {
+    n = Math.floor(n / 2);
+    steps++;
+  }
+  return steps;
+}</code></pre>
+    <p>That loop <em>is</em> the definition of log₂ (floored). Whenever you see a
+    variable being halved toward a fixed target, the loop count is log n — and
+    you never need to compute a logarithm to know it.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+    [
+      {"name":"n = 1",         "args":[1],       "expect":0},
+      {"name":"n = 8",         "args":[8],       "expect":3},
+      {"name":"n = 1024",      "args":[1024],    "expect":10},
+      {"name":"n = 1000",      "args":[1000],    "expect":9},
+      {"name":"n = 1,000,000", "args":[1000000], "expect":19}
+    ]
+  </script>
+</div>
+
+<p>Nineteen. A million elements, nineteen comparisons. Put that next to the other
+two shapes on the same input and the reason complexity is worth an entire lesson
+becomes a single line of arithmetic:</p>
+
+<div class="ladder">
+<span class="lbl">at n = 1,000,000 …</span>
+O(log n)     <span class="cool">19</span>              instant
+O(n)         1,000,000       instant
+O(n log n)   ~20,000,000     a fraction of a second
+O(n²)        <span class="hot">1,000,000,000,000</span>   about three hours
+</div>
+
+<p>Same input. Same machine. The gap between the third row and the fourth is the
+gap between a solution and a failed interview, and it is visible in the code
+before you run it — the fourth row is the one with the nested loop.</p>
+
+<h2><span class="num">Part three</span>Running it backwards</h2>
+
+<p>Here is the part that fixes the blank editor, and the specific gap in the
+contract you sent me for Two Sum. You wrote the constraint down —
+<code>2 &lt;= nums.length &lt;= 1000</code> — and then drew no conclusion from
+it. A bound you have recorded but not <em>cashed in</em> is just a number
+sitting on the page.</p>
+
+<p>Cashing it in needs exactly one fact, and it is the only number in this lesson
+worth memorising: <strong>a modern machine performs a few hundred million simple
+operations per second.</strong> Roughly 10⁸ as a conservative figure, per the
+<a href="https://usaco.guide/bronze/time-comp">USACO Guide</a>; "some hundreds of
+millions" in
+<a href="https://cses.fi/book/book.pdf">Laaksonen's Competitive Programmer's
+Handbook</a>. With that one number, a bound becomes a verdict.</p>
+
+<table class="shapes">
+  <thead>
+    <tr><th style="width:8rem">n up to</th><th style="width:8.5rem">Affordable</th><th>Which usually means</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">10</td><td class="big">O(n!)</td><td>Try every permutation. Backtracking.</td></tr>
+    <tr><td class="num">20–25</td><td class="big">O(2ⁿ)</td><td>Every subset. Take-it-or-leave-it recursion.</td></tr>
+    <tr><td class="num">500</td><td class="big">O(n³)</td><td>Three nested loops are fine.</td></tr>
+    <tr><td class="num">5,000</td><td class="big">O(n²)</td><td>Brute-force every pair.</td></tr>
+    <tr><td class="num">10⁶</td><td class="big">O(n log n)</td><td>Sort first, then one pass.</td></tr>
+    <tr><td class="num">10⁷ and up</td><td class="big">O(n)</td><td>Hash map, two pointers, sliding window.</td></tr>
+    <tr><td class="num">10¹⁸</td><td class="big">O(log n)</td><td>Binary search, or arithmetic. You cannot read the input.</td></tr>
+  </tbody>
+</table>
+
+<p>These are order-of-magnitude heuristics, not laws, and the two sources
+disagree at the edges — Laaksonen puts the O(n²) line at n ≤ 5,000, the USACO
+Guide at n ≤ 7,500. Treat that disagreement as the point rather than as a
+problem: you are choosing between 10⁶ and 10¹⁰ operations, never between 5,000
+and 7,500.</p>
+
+<h3>What your Two Sum bound actually said</h3>
+
+<p>n ≤ 1000. So O(n²) is 10⁶ operations, which runs in well under a second. The
+expected answer here is "brute force is too slow," and the expected answer is
+<strong>wrong</strong>:</p>
+
+<div class="callout">
+  <span class="callout-label">The verdict line, out loud</span>
+  <p style="margin:0">"n is at most 1,000, so a double loop is about a million
+  operations — comfortably under a second. Brute force is <em>allowed</em> here.
+  I will still write the hash map, because O(n) is easier to get right than a
+  careful nested loop with an index-reuse bug in it."</p>
+</div>
+
+<p>That is a stronger answer than the rehearsed one, for two reasons. It is true.
+And it demonstrates that you converted the bound rather than pattern-matching the
+problem to a memorised complexity — which is the difference an interviewer is
+actually listening for.</p>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 3 of 3</span>
+  <p class="quiz-q">A problem states <code>1 &lt;= nums.length &lt;=
+  100000</code>. What does that bound tell you about a double loop?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="n = 10⁵, so n² = 10¹⁰. At roughly 10⁸ operations per second that is about a hundred seconds. The bound has ruled out quadratic before you wrote a line, which means the intended solution is O(n) or O(n log n).">n² is 10¹⁰ steps; far too slow</button></li>
+    <li><button data-why="That is n, not n². Squaring 10⁵ gives 10¹⁰ — five orders of magnitude worse than the figure here, and the difference between instant and a hundred seconds.">n² is 10⁵ steps; easily affordable</button></li>
+    <li><button data-why="10⁷ would be n² for an n of around 3,000. At n = 100,000 the square is 10¹⁰, which is not borderline — it is three orders of magnitude past what a second buys you.">n² is 10⁷ steps; probably fine</button></li>
+    <li><button data-why="Deciding this without running anything is precisely what the bound is for. One multiplication and one comparison against 10⁸ settles it, before any code exists to benchmark.">Bounds say nothing; benchmark it first</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<p class="score" data-score>You have <b>0</b> of <b>0</b> correct.</p>
+
+<h2><span class="num">Space</span>In one paragraph</h2>
+
+<p>Space complexity is <em>extra</em> memory beyond the input, and it is the sum
+of two things: <strong>what you allocate</strong> that grows with n, and
+<strong>the maximum depth of your recursion</strong> — not the total number of
+calls, the deepest the stack ever gets. So merge sort is O(n) space: the arrays
+it allocates dominate its O(log n) stack. Insertion sort is O(1): a few index
+variables, whatever n is. A handful of counters is never O(n), however many of
+them you declare.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Today's rep</span></h2>
+
+<ol class="steps">
+  <li>
+    <h3>Cash in the bound on your own contract</h3>
+    <p>Go back to the Two Sum contract you sent me and add one line to Bounds:
+    <em>"n ≤ 1000 → n² is 10⁶ → quadratic is allowed."</em> One line. This is the
+    one gap in that contract I have not seen you close, and from now on every
+    contract you write should carry a verdict, not just a number.</p>
+  </li>
+  <li>
+    <h3>Predict from constraints alone</h3>
+    <p>Open any problem on <a href="https://www.techinterviewhandbook.org/grind75/">Grind
+    75</a>. Read <strong>only the constraints</strong> — do not read the problem.
+    Write down the complexity you expect to need and the pattern it implies. Then
+    read the problem and check. Two minutes, and it trains the exact instinct that
+    replaces the freeze.</p>
+  </li>
+</ol>
+
+<hr>
+
+<div class="colophon">
+
+  <h3>Read this next</h3>
+  <p><strong><a href="https://usaco.guide/bronze/time-comp">USACO Guide — Time
+  Complexity</a></strong>. Free, written by the Competitive Programming
+  Initiative, and the source of the bound → verdict table above. It is
+  competitive-programming shaped rather than interview shaped, which is useful
+  here: the constraint-reading skill is far more explicit in that world than in
+  interview prep, and it is the same skill.</p>
+
+  <h3>Sources for this lesson</h3>
+  <ul>
+    <li><a href="https://usaco.guide/bronze/time-comp">USACO Guide — Time Complexity</a> — the verdict table; the 10⁸ ops/second estimate</li>
+    <li><a href="https://cses.fi/book/book.pdf">Competitive Programmer's Handbook</a> (PDF), §2.3 — the corroborating table, and "some hundreds of millions of operations in a second"</li>
+    <li><a href="https://www.bigocheatsheet.com/">Big-O Cheat Sheet</a> — the structure and sorting tables</li>
+    <li><a href="https://v8.dev/blog/array-sort">Getting things sorted in V8</a> — why <code>arr.sort()</code> is O(n log n) and stable</li>
+    <li><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford CS161, Lecture 1</a> (PDF) — asymptotic notation derived formally</li>
+  </ul>
+
+  <h3>In this workspace</h3>
+  <ul>
+    <li><a href="../reference/complexity.html">Reference · Complexity</a> — <strong>new.</strong> Both tables, the built-in costs, the vocabulary. Print this one</li>
+    <li><a href="../reference/sorting.html">Reference · Sorting</a> · <a href="../reference/patterns.html">Patterns</a> · <a href="../reference/problem-contract.html">Contract</a> · <a href="../reference/curriculum.html">Curriculum</a></li>
+    <li><a href="0002-insertion-sort.html">Lesson 2</a> · <a href="0003-two-sum-from-contract-to-code.html">Lesson 3</a> · <a href="0004-merge-sort.html">Lesson 4</a></li>
+    <li>Lesson 6 — <em>arrays and strings</em>. The built-in cost table above, verified by measurement rather than asserted, plus why <code>shift()</code> in a loop is the bug you will actually write.</li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>Your teacher is one message away.</strong> If Exercise 2's ratio
+    converging on ½ felt like a trick rather than a result, say so — that
+    intuition ("but half the work IS less work") is correct, and the reason
+    Big-O throws it away is worth a proper conversation rather than a callout box.
+  </div>
+
+</div>
+
+</div>
+<script src="../assets/widgets.js"></script>
+<script src="../assets/exercise.js"></script>
+</body>
+</html>

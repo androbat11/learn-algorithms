@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4 · Merge Sort</title>
+<link rel="stylesheet" href="../assets/course.css">
+<link rel="stylesheet" href="../assets/widgets.css">
+<link rel="stylesheet" href="../assets/exercise.css">
+<style>
+  .tree { font-family: var(--mono); font-size: 0.79rem; line-height: 1.85;
+    background: var(--paper-sunk); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 1.1rem 1.3rem; margin: 1.7rem 0; overflow-x: auto; }
+  .tree .lvl { color: var(--ink-faint); }
+  .tree .down { color: var(--bad); }
+  .tree .up { color: var(--good); }
+  table.cmp2 { width:100%; border-collapse:collapse; margin:1.5rem 0; font-size:0.88rem; }
+  table.cmp2 th, table.cmp2 td { text-align:left; padding:0.5rem 0.7rem;
+    border-bottom:1px solid var(--rule); }
+  table.cmp2 th { font-family:var(--sans); font-size:0.68rem; font-weight:700;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--accent); }
+  table.cmp2 td.num { font-family: var(--mono); text-align: right; }
+  table.cmp2 .flat { color: var(--good); font-weight: 700; }
+  table.cmp2 .spiky { color: var(--bad); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="page anchor">
+
+<header class="masthead">
+  <p class="eyebrow">Lesson 04 · Sorting · TypeScript</p>
+  <h1>Merge Sort</h1>
+  <p class="standfirst">The first algorithm that beats O(n²), and the first where
+  recursion does the work. The trick is that the recursion is the easy half —
+  almost nobody tells you that.</p>
+  <p class="meta">≈25 minutes · TypeScript · Follows
+  <a href="0003-two-sum-from-contract-to-code.html">Lesson 3</a> · Card:
+  <a href="../reference/sorting.html">Sorting</a></p>
+</header>
+
+<div class="recall" data-recall>
+  <span class="recall-kicker">First · from memory</span>
+  <p class="recall-q">Two things from Lesson 2, no scrolling. What is insertion
+  sort's loop invariant, and how many swaps does it do on an
+  <em>already sorted</em> array of six elements?</p>
+  <textarea placeholder="Invariant: …&#10;Swaps: …"></textarea>
+  <button class="btn">Check</button>
+  <div class="recall-answer" hidden>
+    <span class="verdict">Invariant · zero swaps</span>
+    <p><strong>Invariant:</strong> at the start of each pass, the first
+    <code>i</code> elements are sorted among themselves — not in their final
+    positions.</p>
+    <p><strong>Swaps on sorted input: zero.</strong> You measured it in Exercise
+    3. Every inner loop failed its first test. Hold on to that number; this
+    lesson is going to put it next to merge sort's, and they do not behave the
+    same way at all.</p>
+  </div>
+</div>
+
+<p class="lede">Insertion sort has a ceiling and you can compute exactly where it
+is. At n = 1,000 it does roughly 10⁶ operations and nobody notices. At n =
+100,000 it does 10¹⁰, and you have written something that will not finish while
+you watch. That gap is the entire reason a second sorting algorithm exists.</p>
+
+<p>Merge sort gets to O(n log n), and at n = 100,000 that is about 1.7 million
+operations instead of ten billion — roughly six thousand times less work. Here is
+how it gets there.</p>
+
+<h2><span class="num">The idea</span>Merging is the algorithm</h2>
+
+<p>Merge sort is usually taught as "split the array in half, sort each half, merge
+them," and then people spend an hour trying to hold the recursion in their head
+and conclude they are bad at recursion.</p>
+
+<p>They are not. The framing is just backwards. Here is the honest version:</p>
+
+<div class="callout">
+  <span class="callout-label">The thing to understand</span>
+  <p style="margin:0"><strong>Merging two already-sorted arrays into one sorted
+  array is the algorithm. The recursion is four lines of bookkeeping on top.</strong>
+  If you can write <code>merge</code>, you have written merge sort — the rest
+  follows almost mechanically.</p>
+</div>
+
+<p>So we build <code>merge</code> first, in isolation, where there is no
+recursion to think about at all. It is a loop over two arrays with two
+pointers.<span class="sidenote">Two pointers walking two sorted sequences is a
+pattern in its own right, and you will meet it again on its own terms later. Here
+it arrives as a component rather than as a topic.</span></p>
+
+<h3>How merging works</h3>
+
+<p>You have <code>[1, 3, 5]</code> and <code>[2, 4, 6]</code>. Put a finger on the
+front of each. Repeatedly take the smaller of the two things under your fingers,
+and advance that finger. When one array runs out, everything left in the other is
+already sorted and already larger — so just append it.</p>
+
+<pre><code>left  [1, 3, 5]      right [2, 4, 6]      out []
+       ^                    ^
+1 &lt;= 2  → take 1            out [1]
+3 &lt;= 2? no → take 2         out [1, 2]
+3 &lt;= 4  → take 3            out [1, 2, 3]
+5 &lt;= 4? no → take 4         out [1, 2, 3, 4]
+5 &lt;= 6  → take 5            out [1, 2, 3, 4, 5]
+left is empty → append the rest of right
+                            out [1, 2, 3, 4, 5, 6]</code></pre>
+
+<div class="exercise" data-exercise data-fn="merge">
+  <span class="ex-kicker">Exercise 1 · the algorithm</span>
+  <p class="ex-brief">Given two arrays that are <strong>each already
+  sorted</strong>, return one sorted array containing everything. Do not use
+  <code>.sort()</code>. Do not modify the inputs.</p>
+  <textarea class="ex-code">function merge(left, right) {
+  const out = [];
+  let i = 0, j = 0;
+  // While BOTH have elements left, take the smaller.
+  // Then append whatever remains of the other one.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>Three loops, one after another. First:
+    <code>while (i &lt; left.length &amp;&amp; j &lt; right.length)</code> — push
+    the smaller and advance only that index. Then
+    <code>while (i &lt; left.length)</code> to drain what is left. Then the same
+    for <code>j</code>. Only one of those last two ever runs.</p>
+    <p>Use <code>&lt;=</code> and not <code>&lt;</code> in the comparison, for the
+    same stability reason as Lesson 2.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function merge(left, right) {
+  const out = [];
+  let i = 0, j = 0;
+  while (i &lt; left.length &amp;&amp; j &lt; right.length) {
+    if (left[i] &lt;= right[j]) out.push(left[i++]);
+    else                     out.push(right[j++]);
+  }
+  while (i &lt; left.length)  out.push(left[i++]);
+  while (j &lt; right.length) out.push(right[j++]);
+  return out;
+}</code></pre>
+    <p>O(n + m) time — every element is looked at once. That linearity is what
+    makes the whole thing work.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"interleaving",        "args":[[1,3,5],[2,4,6]], "expect":[1,2,3,4,5,6]},
+    {"name":"one fully before other","args":[[1,2],[3,4]],   "expect":[1,2,3,4]},
+    {"name":"left empty",          "args":[[],[1,2]],        "expect":[1,2]},
+    {"name":"right empty",         "args":[[1,2],[]],        "expect":[1,2]},
+    {"name":"both empty",          "args":[[],[]],           "expect":[]},
+    {"name":"duplicates across",   "args":[[2,2],[2]],       "expect":[2,2,2]},
+    {"name":"negatives",           "args":[[-3,0],[-5,7]],   "expect":[-5,-3,0,7]}
+  ]
+  </script>
+</div>
+
+<h2><span class="num">The recursion</span>Four lines on top</h2>
+
+<p>Now the easy half. To sort an array: if it has fewer than two elements it is
+already sorted, so hand it back. Otherwise cut it in half, sort each half
+<em>the same way</em>, and merge the two results.</p>
+
+<p>The part that feels like a leap is trusting that <code>mergeSort(left)</code>
+returns a sorted array when you have not finished writing
+<code>mergeSort</code> yet. It does. Every recursive call gets a strictly smaller
+array, and arrays of length 0 or 1 stop immediately — so the whole thing bottoms
+out. That stopping condition is the <strong>base case</strong>, and forgetting it
+is how you get a stack overflow.</p>
+
+<div class="recall" data-recall>
+  <span class="recall-kicker">Trace it first</span>
+  <p class="recall-q">Before writing code — this is the <em>algorithm trace</em>
+  from the contract card. Split <code>[5, 2, 4, 1]</code> all the way down, then
+  merge it back up. Write every intermediate array.</p>
+  <textarea placeholder="split:  [5,2,4,1] -> …"></textarea>
+  <button class="btn">Compare</button>
+  <div class="recall-answer" hidden>
+    <span class="verdict">The trace</span>
+<pre style="margin:0.4rem 0 0"><code>split   [5,2,4,1]
+        [5,2]      [4,1]
+        [5] [2]    [4] [1]
+merge   [2,5]      [1,4]
+        [1,2,4,5]</code></pre>
+    <p style="margin-top:0.7rem">Four levels down, four levels back. Notice
+    nothing is compared on the way down — the splitting is pure bookkeeping. All
+    the actual work happens on the way back up, in <code>merge</code>.</p>
+  </div>
+</div>
+
+<div class="exercise" data-exercise data-fn="mergeSort">
+  <span class="ex-kicker">Exercise 2 · the recursion</span>
+  <p class="ex-brief">Return a <strong>new</strong> sorted array. Your
+  <code>merge</code> from Exercise 1 is already provided below — you only need to
+  write the four lines of <code>mergeSort</code>.</p>
+  <textarea class="ex-code">function merge(left, right) {
+  const out = [];
+  let i = 0, j = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) out.push(left[i++]);
+    else                     out.push(right[j++]);
+  }
+  while (i < left.length)  out.push(left[i++]);
+  while (j < right.length) out.push(right[j++]);
+  return out;
+}
+
+function mergeSort(a) {
+  // Base case: an array of 0 or 1 elements is already sorted.
+  // Otherwise: find the middle, sort both halves, merge them.
+
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p><code>if (a.length &lt;= 1) return a.slice();</code> — the copy matters,
+    so callers never get a reference to the original.</p>
+    <p>Then <code>const mid = Math.floor(a.length / 2)</code>,
+    <code>a.slice(0, mid)</code> and <code>a.slice(mid)</code>. Call
+    <code>mergeSort</code> on each and pass both to <code>merge</code>.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>function mergeSort(a) {
+  if (a.length &lt;= 1) return a.slice();
+  const mid = Math.floor(a.length / 2);
+  const left  = mergeSort(a.slice(0, mid));
+  const right = mergeSort(a.slice(mid));
+  return merge(left, right);
+}</code></pre>
+    <p>Five lines, and four of them are bookkeeping. The sorting happens
+    entirely inside <code>merge</code> — which you wrote first, on purpose.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"mixed",          "args":[[5,2,4,1]],   "expect":[1,2,4,5]},
+    {"name":"empty",          "args":[[]],          "expect":[]},
+    {"name":"single element", "args":[[42]],        "expect":[42]},
+    {"name":"all identical",  "args":[[7,7,7]],     "expect":[7,7,7]},
+    {"name":"reverse sorted", "args":[[5,4,3,2,1]], "expect":[1,2,3,4,5]},
+    {"name":"already sorted", "args":[[1,2,3,4,5]], "expect":[1,2,3,4,5]},
+    {"name":"negatives",      "args":[[-3,0,-7,5]], "expect":[-7,-3,0,5]},
+    {"name":"odd length",     "args":[[3,4,5,6,1]], "expect":[1,3,4,5,6]}
+  ]
+  </script>
+</div>
+
+<h2><span class="num">Why n log n</span>Count the levels</h2>
+
+<p>Two facts multiplied together. Take <code>[8, 7, 6, 5, 4, 3, 2, 1]</code>:</p>
+
+<div class="tree">
+<span class="lvl">level 0</span>  <span class="down">[8, 7, 6, 5, 4, 3, 2, 1]</span>
+<span class="lvl">level 1</span>  <span class="down">[8, 7, 6, 5]</span>  <span class="down">[4, 3, 2, 1]</span>
+<span class="lvl">level 2</span>  <span class="down">[8, 7]</span>  <span class="down">[6, 5]</span>  <span class="down">[4, 3]</span>  <span class="down">[2, 1]</span>
+<span class="lvl">level 3</span>  <span class="down">[8] [7] [6] [5] [4] [3] [2] [1]</span>
+          <span class="lvl">— then merge back up —</span>
+<span class="lvl">level 2</span>  <span class="up">[7, 8]</span>  <span class="up">[5, 6]</span>  <span class="up">[3, 4]</span>  <span class="up">[1, 2]</span>
+<span class="lvl">level 1</span>  <span class="up">[5, 6, 7, 8]</span>  <span class="up">[1, 2, 3, 4]</span>
+<span class="lvl">level 0</span>  <span class="up">[1, 2, 3, 4, 5, 6, 7, 8]</span>
+</div>
+
+<ul>
+  <li><strong>How many levels?</strong> You halve until you reach 1. From 8 that
+    is 8 → 4 → 2 → 1, three halvings. That is <strong>log₂ n</strong>. Doubling
+    the input adds one level, not double the work — this is why the algorithm
+    scales.</li>
+  <li><strong>How much work per level?</strong> Every level touches all n
+    elements exactly once during merging, no matter how they are grouped.
+    That is <strong>O(n)</strong>.</li>
+</ul>
+
+<p>Multiply: <strong>O(n log n)</strong>. Not because of a formula you memorised,
+but because you counted the levels and counted the work on each.</p>
+
+<h2><span class="num">The trade</span>What it costs you</h2>
+
+<p>Merge sort is not free, and knowing what you gave up is the kind of thing
+interviewers probe.</p>
+
+<p><strong>Space.</strong> Insertion sort sorts in place — O(1) extra. Merge sort
+builds new arrays at every level, so it needs <strong>O(n)</strong> extra memory.
+That is the price of the speed.</p>
+
+<p><strong>Adaptivity.</strong> Insertion sort noticed when its input was already
+sorted and did nothing. Merge sort cannot notice. It splits all the way down and
+merges all the way back regardless — the shape of the input never changes what it
+does. Do not take my word for it. Measure it.</p>
+
+<div class="exercise" data-exercise data-fn="countComparisons">
+  <span class="ex-kicker">Exercise 3 · measure the claim</span>
+  <p class="ex-brief">Both functions are given below, working. <strong>Add
+  counting</strong>: return how many times an element from the left half is
+  compared against one from the right half — that is, one count per iteration of
+  the main <code>while</code> loop. The two draining loops compare nothing.</p>
+  <textarea class="ex-code">function countComparisons(a) {
+  let count = 0;
+
+  function merge(left, right) {
+    const out = [];
+    let i = 0, j = 0;
+    while (i < left.length && j < right.length) {
+      if (left[i] <= right[j]) out.push(left[i++]);
+      else                     out.push(right[j++]);
+    }
+    while (i < left.length)  out.push(left[i++]);
+    while (j < right.length) out.push(right[j++]);
+    return out;
+  }
+
+  function sort(arr) {
+    if (arr.length <= 1) return arr.slice();
+    const mid = Math.floor(arr.length / 2);
+    return merge(sort(arr.slice(0, mid)), sort(arr.slice(mid)));
+  }
+
+  sort(a);
+  return count;
+}</textarea>
+  <div class="ex-bar">
+    <button class="btn run">Run tests</button>
+    <button class="btn ghost hint">Hint</button>
+    <button class="btn ghost solution">Solution</button>
+  </div>
+  <div class="ex-results"></div>
+  <div class="ex-hint" hidden>
+    <span class="verdict">Hint</span>
+    <p>One line. <code>count++</code> as the first statement inside the main
+    <code>while (i &lt; left.length &amp;&amp; j &lt; right.length)</code> loop —
+    before the <code>if</code>, because the comparison happens whichever branch
+    is taken. Nothing else changes.</p>
+  </div>
+  <div class="ex-answer" hidden>
+    <span class="verdict">Solution</span>
+<pre><code>while (i &lt; left.length &amp;&amp; j &lt; right.length) {
+  count++;                                    // &lt;- the only new line
+  if (left[i] &lt;= right[j]) out.push(left[i++]);
+  else                     out.push(right[j++]);
+}</code></pre>
+    <p>The counter lives in the enclosing function, so both inner functions can
+    reach it — a closure, which is also why <code>sort</code> and
+    <code>merge</code> are nested rather than top-level.</p>
+  </div>
+  <script type="application/json" class="ex-tests">
+  [
+    {"name":"sorted, n=4",         "args":[[1,2,3,4]],          "expect":4},
+    {"name":"reverse sorted, n=4", "args":[[4,3,2,1]],          "expect":4},
+    {"name":"mixed, n=4",          "args":[[5,2,4,1]],          "expect":5},
+    {"name":"sorted, n=8",         "args":[[1,2,3,4,5,6,7,8]],  "expect":12},
+    {"name":"reverse sorted, n=8", "args":[[8,7,6,5,4,3,2,1]],  "expect":12},
+    {"name":"single element",      "args":[[1]],                "expect":0},
+    {"name":"empty",               "args":[[]],                 "expect":0}
+  ]
+  </script>
+</div>
+
+<h3>Now put the two side by side</h3>
+
+<table class="cmp2">
+  <thead>
+    <tr><th>Input</th><th>Merge sort<br>comparisons</th><th>Insertion sort<br>swaps</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[1,2,3,4]</code> sorted</td><td class="num flat">4</td><td class="num">0</td></tr>
+    <tr><td><code>[4,3,2,1]</code> reversed</td><td class="num flat">4</td><td class="num spiky">6</td></tr>
+    <tr><td><code>[1..8]</code> sorted</td><td class="num flat">12</td><td class="num">0</td></tr>
+    <tr><td><code>[8..1]</code> reversed</td><td class="num flat">12</td><td class="num spiky">28</td></tr>
+  </tbody>
+</table>
+
+<p>Read the middle column: <strong>4, 4, 12, 12</strong>. Merge sort does the
+same work on sorted input as on reversed input — it is
+<strong>not adaptive</strong>. Now read the right column: <strong>0, 6, 0,
+28</strong>. Insertion sort collapses to nothing when the input is already
+sorted, and blows up when it is reversed.</p>
+
+<p>That is the real trade, and it is why serious sorting implementations use
+<em>both</em>: something O(n log n) for the bulk, falling back to insertion sort
+on small or nearly-sorted runs where its adaptivity wins.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Drill</span>Two checks</h2>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 1 of 2</span>
+  <p class="quiz-q">You delete the line <code>if (a.length &lt;= 1) return
+  a.slice();</code> from <code>mergeSort</code>. What happens?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="Without a base case the recursion never stops. A one-element array splits into an empty half and itself, so it calls mergeSort on the same length forever until the call stack is exhausted.">It recurses forever and overflows the stack.</button></li>
+    <li><button data-why="There is nothing left to sort incorrectly — it never gets far enough to produce a wrong answer. It fails by not terminating, not by returning bad output.">It sorts wrongly whenever duplicates exist.</button></li>
+    <li><button data-why="The base case is not an optimisation, it is what makes the recursion finite. Removing it does not make anything slower; it makes it never finish.">It still works but becomes much slower.</button></li>
+    <li><button data-why="Only the empty array would be safe by accident. Any array of one or more elements recurses without shrinking below one, so the stack overflows.">It works for every input except empty.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 2 of 2</span>
+  <p class="quiz-q">Your data is 100,000 records that are <em>almost</em> sorted
+  — a few dozen out of place. Which is faster, and why?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="Insertion sort is adaptive: it approaches O(n) as the input approaches sorted, so a nearly-sorted array costs roughly one pass. Merge sort does its full n log n regardless — you measured that yourself, 12 comparisons whether sorted or reversed.">Insertion sort, because it is adaptive.</button></li>
+    <li><button data-why="True in the worst case, and that is exactly what makes this question interesting. Nearly-sorted input is the best case for insertion sort, where its quadratic worst case never materialises.">Merge sort, because it is asymptotically better.</button></li>
+    <li><button data-why="They differ sharply here. The whole point of the table above is that one algorithm responds to input order and the other cannot see it at all.">They perform about equally on this input.</button></li>
+    <li><button data-why="Merge sort's extra memory is a real cost but not the deciding one here. The deciding factor is that insertion sort can exploit existing order and merge sort cannot.">Insertion sort, because it uses less memory.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<p class="score" data-score>You have <b>0</b> of <b>0</b> correct.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Today's rep</span></h2>
+
+<ol class="steps">
+  <li>
+    <h3>Write both functions cold</h3>
+    <p>Blank file. <code>merge</code> first, then <code>mergeSort</code>. If the
+    recursion feels slippery, write the trace of <code>[5,2,4,1]</code> at the
+    top of the file and work from it.</p>
+  </li>
+  <li>
+    <h3>Still owed from Lesson 3</h3>
+    <p>The repaired Two Sum contract, and one new problem contracted but not
+    solved. Five minutes each. You now have two more finished traces to model
+    them on — the merge sort split-and-merge above is exactly the algorithm-trace
+    format.</p>
+  </li>
+</ol>
+
+<hr>
+
+<div class="colophon">
+
+  <h3>Read this next</h3>
+  <p><strong><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford
+  CS161, Lecture 1</a></strong> (PDF) — the asymptotics section this time, the
+  part you were told to skip in Lesson 2. It derives the n log n result formally.
+  You now have the intuition, so the algebra should read as confirmation rather
+  than as news.</p>
+
+  <h3>Sources for this lesson</h3>
+  <ul>
+    <li><a href="https://ycpcs.github.io/cs360-spring2015/lectures/lecture02.html">CS360 — sorting and loop invariants</a> (CLRS Ch. 2)</li>
+    <li><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford CS161, Lecture 1</a> (PDF) — divide and conquer, formally</li>
+    <li><a href="https://github.com/Voultapher/sort-research-rs/blob/main/writeup/driftsort_introduction/text.md">Driftsort design writeup</a> — how real implementations combine both strategies</li>
+  </ul>
+
+  <h3>In this workspace</h3>
+  <ul>
+    <li><a href="../reference/sorting.html">Reference · Sorting</a> — now with both sorts side by side</li>
+    <li><a href="../reference/patterns.html">Reference · Patterns</a> · <a href="../reference/problem-contract.html">Contract</a></li>
+    <li><a href="0002-insertion-sort.html">Lesson 2</a> · <a href="0003-two-sum-from-contract-to-code.html">Lesson 3</a></li>
+    <li>Lesson 5 — <em>complexity</em>. Reading Big-O straight off the shape of the code, so you never have to guess it again.</li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>Your teacher is one message away.</strong> Recursion is the most
+    common place to get genuinely stuck, and "I don't see how it comes back up"
+    is a real question worth asking, not a sign you missed something.
+  </div>
+
+</div>
+
+</div>
+<script src="../assets/widgets.js"></script>
+<script src="../assets/exercise.js"></script>
+</body>
+</html>

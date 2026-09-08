@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parked · Insertion Sort in Rust</title>
+<link rel="stylesheet" href="../../assets/course.css">
+<link rel="stylesheet" href="../../assets/widgets.css">
+<style>
+  .trace { font-family: var(--mono); font-size: 0.8rem; width: 100%;
+           border-collapse: collapse; margin: 1.6rem 0; }
+  .trace th, .trace td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--rule);
+           text-align: left; vertical-align: top; }
+  .trace th { font-family: var(--sans); font-size: 0.68rem; font-weight: 700;
+           letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+  .trace .sorted { color: var(--good); font-weight: 700; }
+  .trace .cursor { color: var(--accent); font-weight: 700; }
+  .bad-code { border-left: 3px solid var(--bad); }
+  .good-code { border-left: 3px solid var(--good); }
+</style>
+</head>
+<body>
+<div class="page anchor">
+
+<header class="masthead">
+  <p class="eyebrow">Parked · Not in sequence · Rust</p>
+  <h1>Insertion Sort in Rust</h1>
+  <p class="standfirst">You already know bubble sort. This is the one that
+  replaces it — and the first algorithm you will write in Rust, where a
+  three-character detail turns a correct C loop into a panic.</p>
+  <p class="meta">≈20 minutes · Rust · <strong>Not part of the numbered sequence</strong> · Card:
+  <a href="../../reference/sorting.html">Sorting</a></p>
+</header>
+
+<div class="recall" data-recall>
+  <span class="recall-kicker">First · from yesterday</span>
+  <p class="recall-q">Before anything new. Write the five lines of the problem
+  contract, in order. No scrolling, no peeking at the card.</p>
+  <textarea placeholder="1. …"></textarea>
+  <button class="btn">Check</button>
+  <div class="recall-answer" hidden>
+    <span class="verdict">Given · Goal · Bounds · Trace · Breaks</span>
+    <p>If that came back slowly, good — slow retrieval is the retrieval that
+    builds something. If it came back wrong, that is worth more than getting it
+    right, because now you know which line to watch.</p>
+  </div>
+</div>
+
+<div class="callout warn" style="margin-top:0">
+  <span class="callout-label">Parked for later</span>
+  <p style="margin:0">This lesson is written in <strong>Rust</strong> and sits
+  outside the current sequence. The course is doing the fundamentals in
+  TypeScript first, by Manuel's decision. Come back to this once the algorithms
+  are solid and you are ready to port them — the content is finished and the code
+  is tested, it is just early.</p>
+</div>
+
+<p class="lede">Here is the thing nobody says out loud about bubble sort: it is
+not a bad algorithm because it is slow. Merge sort is coming and it is faster,
+but that is not the point. Bubble sort is a bad <em>teacher</em>, because you can
+write it correctly without ever being able to say why it works. You just push big
+things rightward until nothing moves, and it sorts, and you shrug.</p>
+
+<p>Insertion sort is the same complexity class and it is a far better teacher,
+because it comes with a sentence you can check at every step. That sentence is
+called a <strong>loop invariant</strong>, and it is the single most useful tool
+for reasoning about code you have not run yet — which is exactly the situation
+you are in at a whiteboard.</p>
+
+<h2><span class="num">The idea</span>One sentence, true the whole way through</h2>
+
+<p>Insertion sort is how you sort a hand of playing cards. The cards on the left
+are already in order. You pick up the next one and slide it leftward until it
+sits in the right place. Repeat.</p>
+
+<p>The invariant is the promise that makes it work:</p>
+
+<div class="callout">
+  <span class="callout-label">The loop invariant</span>
+  <p style="margin:0"><strong>At the start of each iteration of the outer loop,
+  the first <code>i</code> elements are sorted among themselves.</strong></p>
+</div>
+
+<p>Read that carefully, because there is a trap in it. <em>Sorted among
+themselves</em> is not the same as <em>in their final positions</em>. Element 0
+might still get displaced later by something smaller arriving from the right.
+That distinction is the whole difference between insertion sort and selection
+sort, and interviewers do ask it.<span class="sidenote">This is the standard
+CLRS treatment: an invariant is proved in three parts — <em>initialization</em>
+(true before the loop), <em>maintenance</em> (each pass preserves it), and
+<em>termination</em> (when the loop ends, it gives you what you wanted).
+<a href="https://ycpcs.github.io/cs360-spring2015/lectures/lecture02.html">CS360
+— insertion sort and loop invariants</a>;
+<a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford
+CS161, Lecture 1</a> (PDF).</span></p>
+
+<p>Check the three parts yourself. <em>Initialization</em>: before the first
+pass, <code>i = 1</code>, and one element is trivially sorted. <em>Maintenance</em>:
+each pass slides element <code>i</code> into the sorted region, making it
+<code>i + 1</code> long. <em>Termination</em>: the loop ends when <code>i</code>
+reaches the length, so all <code>n</code> elements are sorted among themselves —
+which, when it is all of them, does mean final positions.</p>
+
+<h3>Trace it by hand</h3>
+
+<p><code>[5, 2, 4, 1]</code>. Green is the sorted region, rust is the element
+being placed.</p>
+
+<table class="trace">
+  <thead><tr><th>Pass</th><th>Array</th><th>What happened</th></tr></thead>
+  <tbody>
+    <tr><td>start</td><td><span class="sorted">5</span> 2 4 1</td><td>one element, sorted by definition</td></tr>
+    <tr><td>i = 1</td><td><span class="sorted">2 5</span> 4 1</td><td><span class="cursor">2</span> slid past 5</td></tr>
+    <tr><td>i = 2</td><td><span class="sorted">2 4 5</span> 1</td><td><span class="cursor">4</span> slid past 5, stopped at 2</td></tr>
+    <tr><td>i = 3</td><td><span class="sorted">1 2 4 5</span></td><td><span class="cursor">1</span> slid all the way to the front</td></tr>
+  </tbody>
+</table>
+
+<p>Notice pass <code>i = 2</code>: the 4 stopped early. It compared against 5,
+moved, compared against 2, and stopped. It did not walk the whole array. That
+early stop is where insertion sort's real advantage lives, and we come back to it.</p>
+
+<h2><span class="num">In Rust</span>The loop that panics</h2>
+
+<p>Every textbook writes insertion sort roughly like this, and it is correct — in
+C. Translate it directly into Rust and it detonates:</p>
+
+<pre class="bad-code"><code>// ✗ Translated straight from C. Do not use.
+fn insertion_sort(a: &amp;mut [i32]) {
+    for i in 1..a.len() {
+        let key = a[i];
+        let mut j = i - 1;
+
+        while j &gt;= 0 &amp;&amp; a[j] &gt; key {   // warning: comparison is useless
+            a[j + 1] = a[j];
+            j -= 1;                     // 💥 panics when j reaches 0
+        }
+        a[j + 1] = key;
+    }
+}</code></pre>
+
+<p>Two things go wrong, and both come from the same fact: <code>j</code> is a
+<code>usize</code>, and a <code>usize</code> cannot be negative.</p>
+
+<p>First, <code>j &gt;= 0</code> is <em>always true</em>. The compiler even tells
+you — <code>unused_comparisons</code>, "comparison is useless due to type
+limits" — but it is a warning, not an error, so it compiles and you get to find
+out at runtime. Second, when <code>j</code> is 0 and you write
+<code>j -= 1</code>, there is no negative to go to. In a debug build that panics
+with <em>attempt to subtract with overflow</em>. In a release build it silently
+wraps to <code>usize::MAX</code>, and then <code>a[j]</code> panics on the index
+instead — <em>index out of bounds: the len is 4 but the index is
+18446744073709551615</em>. Different message, same crash. Both of those are real
+output; run it yourself at the end of this lesson.</p>
+
+<div class="callout warn">
+  <span class="callout-label">Worth keeping</span>
+  <p>This is not a trivia question — it is the shape of a whole category of Rust
+  bug. Any downward loop over indices is a place where <code>usize</code>
+  underflow is waiting. In an interview, saying <em>"careful, <code>j</code> is
+  unsigned here"</em> before you write the loop is exactly the signal a Rust
+  interviewer is listening for.</p>
+</div>
+
+<h3>The version that works</h3>
+
+<p>The fix is not a cast. It is to reformulate the loop so the index never needs
+to go below zero — compare <em>backwards</em> from <code>j</code> instead of
+sitting at <code>j - 1</code>:</p>
+
+<pre class="good-code"><code>fn insertion_sort(a: &amp;mut [i32]) {
+    for i in 1..a.len() {
+        let mut j = i;
+        while j &gt; 0 &amp;&amp; a[j - 1] &gt; a[j] {
+            a.swap(j - 1, j);
+            j -= 1;
+        }
+    }
+}</code></pre>
+
+<p>Read what changed. <code>j</code> starts at <code>i</code>, not
+<code>i - 1</code>. The guard is <code>j &gt; 0</code>, which is a real condition
+rather than a tautology, and it short-circuits before <code>a[j - 1]</code> is
+ever evaluated at <code>j == 0</code>. And
+<a href="https://doc.rust-lang.org/std/primitive.slice.html#method.swap"><code>a.swap(j - 1, j)</code></a>
+does the exchange without you holding two mutable borrows at once — which is the
+thing the borrow checker would otherwise stop you doing.</p>
+
+<p>There is a quiet bonus. Empty and single-element slices need no special case:
+<code>1..0</code> and <code>1..1</code> are both empty ranges in Rust, so the
+loop simply never runs. Two of the <code>Breaks</code> from Lesson 1, handled by
+construction rather than by an <code>if</code>.<span class="sidenote">Honest
+footnote: this swap-based version does three writes per step where a
+shift-based one does one. The standard library uses shifting —
+<a href="https://doc.rust-lang.org/src/core/slice/sort/shared/smallsort.rs.html"><code>insertion_sort_shift_left</code></a>.
+Clarity first; you can optimise once you can write it without thinking.</span></p>
+
+<h2><span class="num">Why it matters</span>The algorithm that is actually in std</h2>
+
+<p>Insertion sort is O(n²) in the worst case, and you will hear it dismissed for
+that. But look again at the trace, at the 4 that stopped after two comparisons.
+On input that is <em>already sorted</em>, every inner loop exits on its first
+test, and the whole thing runs in O(n). Insertion sort is <strong>adaptive</strong>:
+it gets faster the closer the input already is to sorted. It is also
+<strong>stable</strong> — equal elements keep their relative order, because the
+guard is <code>&gt;</code> and not <code>&gt;=</code>.</p>
+
+<p>Which is why this is not a toy. Rust's standard library sort is a hybrid, and
+below a small-length threshold it hands the work to
+<a href="https://doc.rust-lang.org/src/core/slice/sort/shared/smallsort.rs.html"><code>insertion_sort_shift_left</code></a>
+— roughly twenty elements or fewer, per the
+<a href="https://github.com/Voultapher/sort-research-rs/blob/main/writeup/driftsort_introduction/text.md">driftsort
+design writeup</a>. Every time you call <code>.sort()</code> on a small
+<code>Vec</code>, this is the code that runs.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Drill</span>Three checks</h2>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 1 of 3</span>
+  <p class="quiz-q">In the C-style version above, <code>j</code> is a
+  <code>usize</code> and the loop reaches <code>j == 0</code>. What happens?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="In debug: 'attempt to subtract with overflow'. In release it wraps to usize::MAX and the next a[j] panics on the index instead. The j >= 0 guard never fires because it cannot — the compiler warns about exactly that with the unused_comparisons lint.">It panics, because usize cannot go negative.</button></li>
+    <li><button data-why="This is the C intuition, and it is precisely what does not carry over. The guard j >= 0 is a tautology for an unsigned type — it is always true, so it catches nothing.">It exits cleanly, because the guard catches.</button></li>
+    <li><button data-why="Reasonable guess, since the guard is indeed always true. But it does not get the chance to loop forever: the subtraction itself fails first, on the very iteration where j is zero.">It loops forever, because the condition holds.</button></li>
+    <li><button data-why="The optimiser will not rescue an arithmetic error. In debug builds overflow checks are on by design, and in release the wrapping is defined behaviour that then produces an out-of-bounds index.">It compiles away, because the optimiser notices.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 2 of 3</span>
+  <p class="quiz-q">At the start of each outer iteration of insertion sort,
+  what is guaranteed?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="Sorted relative to each other — but not necessarily where they finally end up. A smaller element arriving later will displace every one of them, as the 1 does in the trace above.">the first i elements are sorted among themselves</button></li>
+    <li><button data-why="This is selection sort's invariant, not insertion sort's, and the difference is the point. Selection sort picks the true minimum each pass, so its prefix really is final. Insertion sort's prefix is provisional.">the first i elements sit in final positions</button></li>
+    <li><button data-why="That is bubble sort's invariant — the one you already know. It builds a sorted region at the END from the largest elements. Insertion sort builds one at the FRONT and makes no claim about magnitude.">the largest i elements have reached the end</button></li>
+    <li><button data-why="Splitting into halves is merge sort, which is Lesson 3. Insertion sort never divides anything; it grows one region by one element per pass.">the array has been split into two halves</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 3 of 3</span>
+  <p class="quiz-q">You run your insertion sort on a slice that is
+  <em>already sorted</em>. How much work does it do?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="O(n). Every inner loop fails its first test — a[j-1] > a[j] is false immediately — so each pass costs one comparison. This is what 'adaptive' means, and it is the reason std reaches for insertion sort on small or nearly-sorted runs.">Linear — each inner loop exits immediately.</button></li>
+    <li><button data-why="This is the worst case, not this case. Quadratic happens on reverse-sorted input, where every element has to travel the full width of the sorted region. Already-sorted input is the opposite extreme.">Quadratic — the inner loop always runs.</button></li>
+    <li><button data-why="Logarithmic would need halving, which insertion sort never does. You could binary-search for the insertion point, but the shifting still costs linear work per element, so it does not help overall.">Logarithmic — it halves the search space.</button></li>
+    <li><button data-why="There is no detection step, and there is no shortcut. It still walks all n elements — it just does almost nothing at each one. Linear work, not constant.">Constant — it detects sorted input first.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<p class="score" data-score>You have <b>0</b> of <b>0</b> correct.</p>
+
+<hr class="dinkus">
+
+<div class="recall" data-recall>
+  <span class="recall-kicker">From memory</span>
+  <p class="recall-q">Write the whole function. Signature included, no scrolling.
+  If you stall, write the invariant sentence first and derive the loop from it —
+  that is the technique, not a workaround.</p>
+  <textarea placeholder="fn insertion_sort(a: &mut [i32]) {"></textarea>
+  <button class="btn">Compare with mine</button>
+  <div class="recall-answer" hidden>
+    <span class="verdict">Reference</span>
+<pre style="margin:0.4rem 0 0"><code>fn insertion_sort(a: &amp;mut [i32]) {
+    for i in 1..a.len() {
+        let mut j = i;
+        while j &gt; 0 &amp;&amp; a[j - 1] &gt; a[j] {
+            a.swap(j - 1, j);
+            j -= 1;
+        }
+    }
+}</code></pre>
+    <p style="margin-top:0.8rem">Differences that matter: did you guard with
+    <code>j &gt; 0</code>? Did you start <code>j</code> at <code>i</code> rather
+    than <code>i - 1</code>? Anything else — naming, <code>&amp;mut Vec</code>
+    instead of <code>&amp;mut [i32]</code> — is taste, not error.</p>
+  </div>
+</div>
+
+<h2><span class="num">Today's rep</span>Ten minutes, in a real crate</h2>
+
+<ol class="steps">
+  <li>
+    <h3>Make somewhere to work</h3>
+    <p><code>cargo new --lib algos &amp;&amp; cd algos</code>. This crate is
+    going to accumulate every structure on your list, so put it somewhere you
+    will find it again.</p>
+  </li>
+  <li>
+    <h3>Write it from the blank file</h3>
+    <p>Not from this page. If you get stuck, write the invariant sentence at the
+    top of the file as a comment and work down from it. Getting stuck and
+    recovering is the rep; copying is not.</p>
+  </li>
+  <li>
+    <h3>Write the tests before you run it</h3>
+    <p>Take them straight off your <code>Breaks</code> line from Lesson 1:</p>
+<pre><code>#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sorts_a_mixed_slice() {
+        let mut a = [5, 2, 9, 1, 5, 6];
+        insertion_sort(&amp;mut a);
+        assert_eq!(a, [1, 2, 5, 5, 6, 9]);
+    }
+
+    #[test]
+    fn handles_the_degenerate_cases() {
+        let mut empty: [i32; 0] = [];
+        insertion_sort(&amp;mut empty);
+        assert_eq!(empty, []);
+
+        let mut one = [42];
+        insertion_sort(&amp;mut one);
+        assert_eq!(one, [42]);
+
+        let mut same = [7, 7, 7];
+        insertion_sort(&amp;mut same);
+        assert_eq!(same, [7, 7, 7]);
+    }
+
+    #[test]
+    fn handles_reverse_sorted() {
+        let mut a = [5, 4, 3, 2, 1];
+        insertion_sort(&amp;mut a);
+        assert_eq!(a, [1, 2, 3, 4, 5]);
+    }
+}</code></pre>
+    <p><code>cargo test</code>. Green on the first try is fine; green on the
+    third is equally fine.</p>
+  </li>
+  <li>
+    <h3>Then break it on purpose</h3>
+    <p>Change your guard to <code>j &gt;= 0</code> and start <code>j</code> at
+    <code>i - 1</code>. Run <code>cargo test</code>, read the panic, then run
+    <code>cargo test --release</code> and read the <em>different</em> panic.
+    Seeing both messages once is worth more than reading this section twice.</p>
+  </li>
+</ol>
+
+<div class="callout">
+  <span class="callout-label">Bring back</span>
+  <p>Paste me your function and your test output. If you hit a borrow-checker
+  error I did not warn you about, that is the most useful thing you can send —
+  it tells me where your Rust actually is, rather than where a state file says
+  it is.</p>
+</div>
+
+<hr>
+
+<div class="colophon">
+
+  <h3>Read this next</h3>
+  <p><strong><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford
+  CS161, Lecture 1</a></strong> (PDF, ~10 pages). Insertion sort and the
+  loop-invariant proof done properly, from a university course rather than a
+  blog. Read only as far as the invariant argument — the asymptotics section can
+  wait for Lesson 4.</p>
+
+  <h3>Sources for this lesson</h3>
+  <ul>
+    <li><a href="https://ycpcs.github.io/cs360-spring2015/lectures/lecture02.html">CS360 — Insertion Sort and loop invariants</a> — the CLRS Chapter 2 treatment: initialization, maintenance, termination.</li>
+    <li><a href="https://doc.rust-lang.org/src/core/slice/sort/shared/smallsort.rs.html">Rust std source — <code>smallsort.rs</code></a> — <code>insertion_sort_shift_left</code>, the real thing, behind <code>SMALL_SORT_FALLBACK_THRESHOLD</code>.</li>
+    <li><a href="https://github.com/Voultapher/sort-research-rs/blob/main/writeup/driftsort_introduction/text.md">Driftsort design writeup</a> — why the small-input fallback exists, and the ~20 element figure.</li>
+    <li><a href="https://doc.rust-lang.org/std/primitive.slice.html#method.swap"><code>slice::swap</code></a> — exchanging two elements without two simultaneous mutable borrows.</li>
+  </ul>
+
+  <h3>In this workspace</h3>
+  <ul>
+    <li><a href="../../reference/sorting.html">Reference · Sorting</a> — grows with each sort you learn</li>
+    <li><a href="../../reference/problem-contract.html">Reference · The Problem Contract</a></li>
+    <li><a href="../0001-the-problem-contract.html">Lesson 1 — The Problem Contract</a></li>
+    <li>Lesson 3 — <em>merge sort and divide-and-conquer</em>. Same language, and the first time recursion carries the weight.</li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>Your teacher is one message away.</strong> If the borrow checker
+    fights you somewhere this lesson did not predict, send the exact error. If
+    you think a drill answer is wrong, argue it — twice now the plan has improved
+    because you pushed back on something I had assumed.
+  </div>
+
+</div>
+
+</div>
+<script src="../../assets/widgets.js"></script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · The Curriculum</title>
+<link rel="stylesheet" href="../assets/course.css">
+<link rel="stylesheet" href="../assets/progress.css">
+<style>
+  .tier { margin: 2.6rem 0; }
+  .tier-head { display: flex; align-items: baseline; gap: 0.8rem;
+    border-bottom: 2px solid var(--accent); padding-bottom: 0.4rem; margin-bottom: 0.3rem; flex-wrap: wrap; }
+  .tier-head h2 { margin: 0; border: 0; }
+  .tier-badge { font-family: var(--sans); font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.11em; text-transform: uppercase; color: var(--paper);
+    background: var(--accent); padding: 0.2rem 0.5rem; border-radius: 3px; }
+  .tier-badge.opt { background: var(--ink-faint); }
+  .tier-why { font-family: var(--sans); font-size: 0.86rem; color: var(--ink-soft);
+    margin: 0.6rem 0 1rem; line-height: 1.55; }
+  ul.tracklist { padding: 0; margin: 0; }
+  .budget { width:100%; border-collapse:collapse; margin:1.3rem 0; font-size:0.88rem; }
+  .budget th, .budget td { text-align:left; padding:0.5rem 0.65rem; border-bottom:1px solid var(--rule); }
+  .budget th { font-family:var(--sans); font-size:0.68rem; font-weight:700;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--accent); }
+  .budget td.num { font-family: var(--mono); text-align: right; }
+  .stat { display:flex; gap:1.6rem; flex-wrap:wrap; margin:1.5rem 0; }
+  .stat div { flex:1 1 8rem; }
+  .stat .n { font-family: var(--sans); font-size:1.75rem; font-weight:700; color:var(--accent);
+    line-height:1.1; font-variant-numeric: lining-nums; }
+  .stat .l { font-family: var(--sans); font-size:0.75rem; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.08em; margin-top:0.2rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <p class="eyebrow">Reference Card</p>
+  <h1>The Curriculum</h1>
+  <p class="standfirst">Everything you need to master to pass a coding interview
+  and actually have the fundamentals — ordered by dependency, filtered by what
+  fits in the time you have.</p>
+  <p class="meta">Algorithms workspace · TypeScript · Built 2026-09-07 ·
+  Tick items off; progress is saved in this browser</p>
+</header>
+
+<h2>The arithmetic, first</h2>
+
+<p>Every curriculum on the internet is written as if you have unlimited time. You
+do not, so here is the honest budget before any topic list:</p>
+
+<table class="budget">
+  <thead><tr><th>If you practise…</th><th>Sessions by 1 Dec</th><th>Total time</th></tr></thead>
+  <tbody>
+    <tr><td>Every day, 20 min</td><td class="num">85</td><td class="num">28 hours</td></tr>
+    <tr><td>Weekdays only, 20 min</td><td class="num">60</td><td class="num">20 hours</td></tr>
+  </tbody>
+</table>
+
+<p>Twenty to twenty-eight hours. That is enough to build <strong>real
+fundamentals across Tiers 0–2</strong>. It is not enough to also grind two
+hundred problems, and any plan that claims otherwise is selling something. So
+this list is ordered by what buys the most, and marked clearly where you may
+stop.</p>
+
+<div class="stat">
+  <div><div class="n" data-track-summary><b>0</b>&thinsp;/&thinsp;<b>0</b></div><div class="l">topics done</div></div>
+  <div><div class="n">15</div><div class="l">essential topics</div></div>
+  <div><div class="n">~80%</div><div class="l">of questions covered by Tier 1</div></div>
+</div>
+
+<div class="progress-shell"><div class="progress-fill" data-track-bar></div></div>
+
+<div class="callout">
+  <span class="callout-label">How to use this</span>
+  <p>Each item says what <strong>mastery</strong> means — a thing you can do from
+  a blank file, not a thing you have read about. That is the bar. If you cannot
+  do it without looking, it is not done, however familiar it feels. Familiarity
+  is the illusion; the blank file is the test.</p>
+</div>
+
+<!-- ================= TIER 0 ================= -->
+<div class="tier">
+  <div class="tier-head">
+    <h2>Tier 0 · Foundations</h2>
+    <span class="tier-badge">non-negotiable</span>
+  </div>
+  <p class="tier-why">Not topics so much as equipment. Everything after this
+  assumes them, and skipping them is why people grind hundreds of problems
+  without improving.</p>
+
+  <ul class="tracklist">
+    <li class="track" data-track="contract"><span class="track-label">
+      <strong>The problem contract <span class="meta-tag done">done · lesson 1</span></strong>
+      <span class="crit">Given, Goal, Bounds, Trace, Breaks — in under three minutes on an unseen problem, before writing code.</span>
+    </span></li>
+    <li class="track" data-track="complexity"><span class="track-label">
+      <strong>Big-O complexity <span class="meta-tag">ready · lesson 5</span></strong>
+      <span class="crit">Read time and space complexity straight off the shape of the code. Nested loop → n². Halving → log n. Recursion that splits → n log n. Convert an input bound into a verdict about which approach is allowed.</span>
+    </span></li>
+    <li class="track" data-track="arrays"><span class="track-label">
+      <strong>Arrays &amp; strings</strong>
+      <span class="crit">Know the cost of every built-in you reach for. <code>includes</code> and <code>indexOf</code> are O(n); <code>shift</code> and <code>unshift</code> are O(n); <code>slice</code> copies. Accidental O(n²) from a linear scan inside a loop is the single most common self-inflicted wound.</span>
+    </span></li>
+    <li class="track" data-track="recursion"><span class="track-label">
+      <strong>Recursion <span class="meta-tag">ready · lesson 4</span></strong>
+      <span class="crit">Write a base case that always terminates. Trust a recursive call before the function is finished. Trace the call tree by hand. Know why a missing base case overflows the stack rather than returning something wrong.</span>
+    </span></li>
+  </ul>
+</div>
+
+<!-- ================= TIER 1 ================= -->
+<div class="tier">
+  <div class="tier-head">
+    <h2>Tier 1 · The core</h2>
+    <span class="tier-badge">~80% of questions</span>
+  </div>
+  <p class="tier-why">If you master only one tier, master this one. These
+  structures and patterns cover the large majority of what interviews actually
+  ask, and every one of them is reachable in a 20-minute session.</p>
+
+  <ul class="tracklist">
+    <li class="track" data-track="hashing"><span class="track-label">
+      <strong>Hash maps &amp; sets <span class="meta-tag">ready · lesson 3</span></strong>
+      <span class="crit">Complement lookup, frequency counting, grouping by a computed key. <strong>The tell:</strong> an inner loop searching for a value you can compute. Map when you need <em>where</em>, Set when you need <em>whether</em>.</span>
+    </span></li>
+    <li class="track" data-track="two-pointers"><span class="track-label">
+      <strong>Two pointers</strong>
+      <span class="crit">Opposite ends closing inward (sorted arrays, palindromes, container problems) and fast/slow in the same direction (cycle detection, finding a midpoint). <strong>The tell:</strong> a sorted array, or a question about pairs.</span>
+    </span></li>
+    <li class="track" data-track="sliding-window"><span class="track-label">
+      <strong>Sliding window</strong>
+      <span class="crit">Fixed size and variable size. Expand right, contract left while a condition is violated. <strong>The tell:</strong> "longest / shortest / maximum contiguous subarray or substring such that…".</span>
+    </span></li>
+    <li class="track" data-track="binary-search"><span class="track-label">
+      <strong>Binary search <span class="meta-tag">you have this</span></strong>
+      <span class="crit">On a sorted array, and — the part most people miss — on an <em>answer space</em>. Write it without an off-by-one. Know which half to discard and why <code>lo + (hi - lo) / 2</code> exists.</span>
+    </span></li>
+    <li class="track" data-track="sorting"><span class="track-label">
+      <strong>Sorting <span class="meta-tag">ready · lessons 2, 4</span></strong>
+      <span class="crit">Insertion sort and merge sort from scratch. Stable vs unstable, adaptive vs not, in-place vs not. Know when to stop showing off and just call <code>.sort((a,b) =&gt; a-b)</code>.</span>
+    </span></li>
+    <li class="track" data-track="stack"><span class="track-label">
+      <strong>Stack</strong>
+      <span class="crit">Matching pairs (brackets), undo semantics, and the monotonic stack for "next greater element". <strong>The tell:</strong> you need the most recent unresolved thing.</span>
+    </span></li>
+    <li class="track" data-track="queue"><span class="track-label">
+      <strong>Queue</strong>
+      <span class="crit">FIFO, and the engine that makes BFS work. Know why <code>arr.shift()</code> is O(n) in JavaScript and what to do instead when it matters.</span>
+    </span></li>
+    <li class="track" data-track="linked-list"><span class="track-label">
+      <strong>Linked lists <span class="meta-tag">on your list</span></strong>
+      <span class="crit">Singly and doubly. Insert, delete, reverse, detect a cycle, find the middle. <strong>The skill underneath:</strong> pointer manipulation without losing the rest of the list — always save <code>next</code> before you overwrite it.</span>
+    </span></li>
+    <li class="track" data-track="binary-tree"><span class="track-label">
+      <strong>Binary trees <span class="meta-tag">on your list</span></strong>
+      <span class="crit">Build one. All four traversals: in-order, pre-order, post-order, level-order. Depth and height. Recursive first, then iterative with an explicit stack.</span>
+    </span></li>
+    <li class="track" data-track="bst"><span class="track-label">
+      <strong>Binary search trees</strong>
+      <span class="crit">Insert, search, delete, validate. Know that in-order traversal of a BST is sorted — that single fact solves a surprising number of problems.</span>
+    </span></li>
+    <li class="track" data-track="heap"><span class="track-label">
+      <strong>Heaps / priority queues</strong>
+      <span class="crit">What the heap property is, and top-k problems. JavaScript has no built-in heap, so know the standard implementation over an array, or a sort-based fallback and its cost.</span>
+    </span></li>
+  </ul>
+</div>
+
+<!-- ================= TIER 2 ================= -->
+<div class="tier">
+  <div class="tier-head">
+    <h2>Tier 2 · Expected</h2>
+    <span class="tier-badge">most loops reach here</span>
+  </div>
+  <p class="tier-why">Beyond the core but still routinely asked. Each introduces
+  a genuinely new way of thinking rather than a new data structure, which is why
+  they take longer than their length suggests.</p>
+
+  <ul class="tracklist">
+    <li class="track" data-track="graphs"><span class="track-label">
+      <strong>Graphs</strong>
+      <span class="crit">Adjacency list vs matrix. DFS and BFS, and knowing which to reach for — BFS for shortest path in an unweighted graph, DFS for connectivity and exploration. Grid problems are graph problems in disguise.</span>
+    </span></li>
+    <li class="track" data-track="backtracking"><span class="track-label">
+      <strong>Backtracking</strong>
+      <span class="crit">Subsets, permutations, combinations. The choose / explore / un-choose skeleton. <strong>The tell:</strong> "find all…" combined with a small input bound.</span>
+    </span></li>
+    <li class="track" data-track="intervals"><span class="track-label">
+      <strong>Intervals</strong>
+      <span class="crit">Merge overlapping, insert into a sorted set, detect conflicts. Almost always begins with sorting by start time — the whole family is one insight repeated.</span>
+    </span></li>
+    <li class="track" data-track="dp1"><span class="track-label">
+      <strong>1-D dynamic programming</strong>
+      <span class="crit">Recognise overlapping subproblems. Recursion → memoisation → tabulation, in that order. Climbing stairs, house robber, coin change. <strong>The tell:</strong> "how many ways" or "min/max over choices".</span>
+    </span></li>
+  </ul>
+</div>
+
+<!-- ================= TIER 3 ================= -->
+<div class="tier">
+  <div class="tier-head">
+    <h2>Tier 3 · Beyond the budget</h2>
+    <span class="tier-badge opt">skip unless the loop demands it</span>
+  </div>
+  <p class="tier-why">Real topics, genuinely out of reach in 20–28 hours
+  alongside everything above. Listed so you know what you are consciously
+  deferring rather than what you have accidentally missed. Revisit after
+  December, or if a specific company's loop is known to go here.</p>
+
+  <ul class="tracklist">
+    <li class="track" data-track="dp2"><span class="track-label">
+      <strong>2-D dynamic programming</strong>
+      <span class="crit">Grid paths, edit distance, longest common subsequence.</span>
+    </span></li>
+    <li class="track" data-track="tries"><span class="track-label">
+      <strong>Tries</strong>
+      <span class="crit">Prefix trees. Narrow but decisive when autocomplete or word-search comes up.</span>
+    </span></li>
+    <li class="track" data-track="adv-graphs"><span class="track-label">
+      <strong>Advanced graphs</strong>
+      <span class="crit">Topological sort, Dijkstra, union-find. Union-find is the highest-value of the three.</span>
+    </span></li>
+    <li class="track" data-track="greedy"><span class="track-label">
+      <strong>Greedy</strong>
+      <span class="crit">Locally optimal choices, and — the hard part — proving one actually works.</span>
+    </span></li>
+    <li class="track" data-track="bits"><span class="track-label">
+      <strong>Bit manipulation</strong>
+      <span class="crit">XOR tricks, masks, counting set bits. Rarely decisive, occasionally the whole question.</span>
+    </span></li>
+  </ul>
+</div>
+
+<hr class="dinkus">
+
+<h2>If everything slips</h2>
+
+<p>Time will get compressed — it always does. In priority order, the things that
+would still leave you employable:</p>
+
+<ol>
+  <li><strong>Complexity + the contract.</strong> Without these you cannot even
+    discuss a solution, and interviewers read that as not knowing.</li>
+  <li><strong>Hash maps, two pointers, sliding window.</strong> Three patterns,
+    an enormous share of easy and medium array questions.</li>
+  <li><strong>Binary trees and traversals.</strong> The most reliably asked data
+    structure in the entire field.</li>
+  <li><strong>Binary search.</strong> Cheap to learn, frequently asked, and
+    embarrassing to fumble.</li>
+  <li><strong>Linked lists.</strong> Less common than they used to be, but they
+    are on your list and they teach pointer discipline nothing else does.</li>
+</ol>
+
+<h2>How to practise, not just study</h2>
+
+<p>Lessons build knowledge. Problems build the skill, and the two are not
+interchangeable. A workable split for a 20-minute session:</p>
+
+<dl class="contract">
+  <div class="contract-row">
+    <dt>New topic</dt>
+    <dd>One lesson. Learn the shape, write the reference implementation once from
+    a blank file.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Next day</dt>
+    <dd>One problem in that topic. Contract first, always. Twenty minutes hard
+    stop — then read the solution if stuck, and write down <em>why</em> you were
+    stuck.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Day after</dt>
+    <dd>A second problem in the same topic, so the pattern is retrieved rather
+    than recognised.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Weekly</dt>
+    <dd>Re-solve one problem from two weeks ago, cold. This is the spacing, and
+    it is the part everyone skips.</dd>
+  </div>
+</dl>
+
+<div class="callout warn">
+  <span class="callout-label">The trap this plan exists to avoid</span>
+  <p>Solving many problems in one topic then never returning feels productive and
+  builds almost nothing durable. Retrieval after partial forgetting is what
+  creates lasting memory — which means the uncomfortable session, where you have
+  half-forgotten and have to reconstruct, is the one that counts. Comfortable
+  practice is mostly wasted practice.</p>
+</div>
+
+<h2>Which problems</h2>
+
+<p>Do not pick problems yourself; curation is a solved problem and you have no
+time to waste on badly chosen ones.</p>
+
+<ul>
+  <li><a href="https://www.techinterviewhandbook.org/grind75/">Grind 75</a> —
+    tell it how many hours a week you have and it produces a prioritised
+    schedule. From Yangshun Tay, who also wrote Blind 75; 169 problems ranked,
+    top 75 selected. <strong>Start here.</strong></li>
+  <li><a href="https://neetcode.io/roadmap">NeetCode roadmap</a> — the same
+    material as a dependency tree, so you can see which topic unlocks which.
+    Better for <em>ordering</em>; Grind 75 is better for <em>scheduling</em>.</li>
+  <li><a href="https://www.techinterviewhandbook.org/algorithms/study-cheatsheet/">Handbook
+    study cheatsheet</a> — per-topic techniques and the standard mistakes.</li>
+</ul>
+
+<hr class="dinkus">
+
+<div class="colophon">
+  <h3>Sources</h3>
+  <ul>
+    <li><a href="https://www.techinterviewhandbook.org/">Tech Interview Handbook</a> — Yangshun Tay, ex-Meta staff engineer. Free, open source, sells nothing.</li>
+    <li><a href="https://www.techinterviewhandbook.org/grind75/">Grind 75</a> — 169 ranked problems, top 75 by priority.</li>
+    <li><a href="https://neetcode.io/roadmap">NeetCode roadmap</a> — 18 topics as a dependency tree.</li>
+    <li><a href="https://www.unh.edu/teaching-learning-resource-hub/sites/default/files/media/2023-06/itow-introducing-desirable-difficulties-into-practice-and-instruction-bjork-and-bjork.pdf">Bjork &amp; Bjork on desirable difficulties</a> (PDF) — why the practice protocol above is spaced rather than blocked.</li>
+  </ul>
+
+  <h3>Related</h3>
+  <ul>
+    <li><a href="problem-contract.html">The Problem Contract</a> ·
+        <a href="patterns.html">Patterns</a> ·
+        <a href="sorting.html">Sorting</a></li>
+    <li><a href="../MISSION.md">Mission</a> · <a href="../RESOURCES.md">Resources</a></li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>This plan is a hypothesis, not a contract.</strong> If a topic turns
+    out to be harder or easier than budgeted, say so and it gets re-cut. The
+    tiers are the durable part; the ordering inside them is negotiable.
+  </div>
+</div>
+
+</div>
+<script src="../assets/progress.js"></script>
+</body>
+</html>

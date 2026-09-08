@@ -1,0 +1,204 @@
+/* ==========================================================================
+   widgets.css — interactive components shared across lessons.
+   Depends on the custom properties defined in course.css.
+   ========================================================================== */
+
+/* --- shared shell -------------------------------------------------------- */
+
+.quiz, .recall {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  background: var(--paper-sunk);
+  padding: 1.25rem 1.4rem;
+  margin: 2rem 0;
+}
+
+.quiz-kicker, .recall-kicker {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.6rem;
+  font-variant-numeric: lining-nums;
+}
+
+.quiz-q, .recall-q {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  line-height: 1.45;
+}
+
+.quiz-q code, .recall-q code { font-weight: 500; }
+
+/* --- quiz options -------------------------------------------------------- */
+
+.quiz-opts { list-style: none; padding: 0; margin: 0; }
+.quiz-opts li { margin: 0 0 0.55rem; }
+
+.quiz-opts button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.7rem 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, transform 0.08s;
+}
+
+.quiz-opts button:hover:not(:disabled) {
+  border-color: var(--accent-dim);
+  transform: translateX(2px);
+}
+
+.quiz-opts button:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.quiz-opts button:disabled { cursor: default; opacity: 0.62; }
+
+.quiz-opts button.is-correct {
+  border-color: var(--good);
+  background: var(--good-bg);
+  color: var(--good);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.quiz-opts button.is-wrong {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  color: var(--bad);
+  opacity: 1;
+}
+
+.quiz-opts button .mark {
+  float: right;
+  font-weight: 700;
+  margin-left: 0.6rem;
+}
+
+/* --- feedback ------------------------------------------------------------ */
+
+.quiz-fb {
+  margin-top: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-radius: 3px;
+  font-family: var(--sans);
+  font-size: 0.87rem;
+  line-height: 1.55;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.quiz-fb.ok  { border-color: var(--good); background: var(--good-bg); }
+.quiz-fb.no  { border-color: var(--bad);  background: var(--bad-bg);  }
+
+.quiz-fb .verdict {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.28rem;
+  letter-spacing: 0.02em;
+}
+.quiz-fb.ok .verdict { color: var(--good); }
+.quiz-fb.no .verdict { color: var(--bad); }
+
+/* --- recall (generation before reveal) ----------------------------------- */
+
+.recall textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 6.5rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.75rem 0.9rem;
+  resize: vertical;
+}
+
+.recall textarea:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 1px;
+}
+
+.btn {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--paper);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 0.55rem 1.1rem;
+  margin-top: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+
+.btn:hover { opacity: 0.87; }
+.btn:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+
+.recall-answer {
+  margin-top: 1rem;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid var(--good);
+  background: var(--good-bg);
+  border-radius: 3px;
+  font-size: 0.93rem;
+  line-height: 1.55;
+}
+
+.recall-answer > :last-child { margin-bottom: 0; }
+
+.recall-answer .verdict {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--good);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* --- score tally --------------------------------------------------------- */
+
+.score {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: center;
+  border: 1px dashed var(--rule);
+  border-radius: 3px;
+  padding: 0.8rem;
+  margin: 2rem 0;
+  font-variant-numeric: lining-nums;
+}
+
+.score b { color: var(--accent); font-size: 1.05rem; }
+
+/* --- print: show everything, hide affordances ---------------------------- */
+
+@media print {
+  .quiz-opts button { border-color: #bbb; opacity: 1; }
+  .btn { display: none; }
+  .recall-answer, .quiz-fb { display: block !important; }
+  .recall textarea { min-height: 4rem; }
+}

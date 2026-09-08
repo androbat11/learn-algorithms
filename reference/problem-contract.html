@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · The Problem Contract</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .card-grid { margin: 2rem 0; }
+  .card {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    background: var(--paper-sunk);
+    break-inside: avoid;
+  }
+  .card h3 {
+    margin: 0 0 0.4rem;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .card p { margin: 0 0 0.5rem; font-size: 0.95rem; }
+  .card p:last-child { margin-bottom: 0; }
+  .card .ask-q {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .two-col { columns: 2; column-gap: 2rem; }
+  .two-col ul { margin: 0; }
+  .two-col li { break-inside: avoid; font-size: 0.9rem; }
+  @media (max-width: 620px) { .two-col { columns: 1; } }
+  table.bank { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.88rem; }
+  table.bank th, table.bank td {
+    text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  table.bank th {
+    font-family: var(--sans); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent);
+  }
+  table.bank td:first-child { font-family: var(--sans); font-size: 0.83rem; width: 34%; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <p class="eyebrow">Reference Card</p>
+  <h1>The Problem Contract</h1>
+  <p class="standfirst">Five lines to write before any code. Print this. Keep it
+  next to the keyboard until it is automatic.</p>
+  <p class="meta">Algorithms &amp; Data Structures workspace · Companion to
+  <a href="../lessons/0001-the-problem-contract.html">Lesson 1</a></p>
+</header>
+
+<h2>The five lines</h2>
+
+<div class="card-grid">
+
+  <div class="card">
+    <h3>1 · Given</h3>
+    <p>Every input, with its <em>type and shape</em>. Not "an array" — "an array
+    of <code>number</code>, possibly empty, possibly with duplicates."</p>
+    <p class="ask-q"><strong>Ask:</strong> What exactly am I handed? What type is
+    each thing? Can it be empty, null, or negative? Is it sorted? Are duplicates
+    allowed?</p>
+  </div>
+
+  <div class="card">
+    <h3>2 · Goal</h3>
+    <p>The exact thing to return, as a <em>type</em>. The single most common
+    ambiguity in all of interviewing is <strong>values versus indices</strong>.</p>
+    <p class="ask-q"><strong>Ask:</strong> What type comes back? What if several
+    answers are valid — any one, or all of them? What is returned when no answer
+    exists?</p>
+  </div>
+
+  <div class="card">
+    <h3>3 · Bounds</h3>
+    <p>The numeric limits. These are not trivia: bounds tell you which
+    complexity is acceptable, which means they tell you the approach.</p>
+    <p class="ask-q"><strong>Ask:</strong> How large can the input get? What
+    range do the values span? Is there a time or memory limit implied?</p>
+  </div>
+
+  <div class="card">
+    <h3>4 · Trace</h3>
+    <p><strong>Three parts, and it is not finished until all three are there:</strong></p>
+    <ol style="margin:0.4rem 0 0.6rem;font-size:0.93rem">
+      <li><strong>A concrete input</strong> — real values, not "an array of numbers"</li>
+      <li><strong>The steps</strong> — the work, written out</li>
+      <li><strong>The output</strong> — the actual answer</li>
+    </ol>
+    <p>An input with no output is not a trace. It is the most common way this
+    line gets faked, because writing the input feels like progress and the output
+    is where the thinking actually happens.</p>
+    <p class="ask-q"><strong>Ask:</strong> Can I produce the answer myself,
+    slowly, without code? Does it match the one I was given?</p>
+  </div>
+
+  <div class="card">
+    <h3>5 · Breaks</h3>
+    <p>The inputs that would embarrass you. Write them down <em>now</em>, while
+    it is cheap, rather than discovering them in front of an interviewer.</p>
+    <p class="ask-q"><strong>Ask:</strong> What is the smallest legal input?
+    What if everything is identical? What if nothing matches?</p>
+  </div>
+
+</div>
+
+<h2>Choosing a trace that is worth writing</h2>
+
+<p>Any input will produce <em>an</em> answer. A good input produces an answer
+that would <strong>catch you being wrong</strong>. Three rules:</p>
+
+<div class="card">
+  <h3>Rule 1 · Small enough to finish by hand</h3>
+  <p>Three to five elements. If you cannot complete it on paper in under a
+  minute, it is too big and you will skip the step — which defeats the point.</p>
+</div>
+
+<div class="card">
+  <h3>Rule 2 · Not a degenerate case</h3>
+  <p>Empty, single-element, and all-identical inputs belong on the
+  <strong>Breaks</strong> line. The Trace should be an ordinary, interesting
+  case — the one that shows the algorithm actually working.</p>
+</div>
+
+<div class="card">
+  <h3>Rule 3 · The answer must not be the first thing you check</h3>
+  <p><strong>This is the one people miss.</strong> If the answer sits at the very
+  front, a broken implementation that always returns the first thing will pass
+  your trace, and you will believe you understand the problem when you do
+  not.</p>
+</div>
+
+<div class="callout warn">
+  <span class="callout-label">Worked example — the difference one number makes</span>
+  <p><code>nums = [3, 4, 5, 6], target = 7</code> &nbsp;→&nbsp; answer
+  <code>[0, 1]</code>. Found on the <strong>first of six pairs</strong>. A
+  function that ignores its input and returns <code>[0, 1]</code> passes this
+  trace.</p>
+  <p style="margin-bottom:0"><code>nums = [3, 4, 5, 6], target = 11</code>
+  &nbsp;→&nbsp; answer <code>[2, 3]</code>. Now <strong>all six pairs</strong>
+  are checked and the answer is the last one. Same array, one number changed, and
+  the trace went from proving nothing to exercising the whole loop.</p>
+</div>
+
+<h2>Two flavours of trace</h2>
+
+<p><strong>Problem trace</strong> — for "solve this": input, the reasoning,
+output.</p>
+
+<pre><code>// Trace: nums = [3, 4, 5, 6], target = 11
+//        3+4=7  3+5=8  3+6=9  4+5=9  4+6=10  5+6=11 ✓
+//        -&gt; [2, 3]   (indices, not values)</code></pre>
+
+<p><strong>Algorithm trace</strong> — for "implement this": the state after each
+step. Use a table; it is how you find an off-by-one before you write it.</p>
+
+<pre><code>// Trace: insertion sort on [5, 2, 4, 1]
+//   start   [5]        2 4 1
+//   i=1     [2 5]      4 1      2 slid past 5
+//   i=2     [2 4 5]    1        4 stopped at 2
+//   i=3     [1 2 4 5]           1 went to the front</code></pre>
+
+<div class="callout">
+  <span class="callout-label">The trace has a second job</span>
+  <p>It becomes your <strong>first test case</strong>, for free. You have already
+  written the input and the expected output in the format a test needs. Every
+  trace you finish is a test you do not have to invent later — and the
+  <strong>Breaks</strong> line supplies the rest of the suite.</p>
+</div>
+
+<h2>Bounds → what they are telling you</h2>
+
+<p>Interviewers state input sizes for a reason. Read the size as a hint about
+the complexity you are expected to reach.</p>
+
+<table class="bank">
+  <thead>
+    <tr><th>If n is about…</th><th>You probably need…</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>n ≤ 10</td><td>Anything. Even generating every permutation, O(n!)</td></tr>
+    <tr><td>n ≤ 20</td><td>Exponential is survivable — O(2ⁿ) subsets, backtracking</td></tr>
+    <tr><td>n ≤ 500</td><td>O(n³) is fine</td></tr>
+    <tr><td>n ≤ 5,000</td><td>O(n²) is fine</td></tr>
+    <tr><td>n ≤ 10⁶</td><td>O(n log n) — sort, heap, or binary search</td></tr>
+    <tr><td>n &gt; 10⁶</td><td>O(n) or O(log n). One pass, hash map, two pointers</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <span class="callout-label">How to use this</span>
+  <p>Read it backwards. If the bound is 10⁵ and your idea is a nested loop, the
+  bound has already told you the idea is wrong — before you wrote a line. That
+  is thirty seconds saved that would otherwise have been ten minutes lost.</p>
+</div>
+
+<h2>Standard clarifying questions</h2>
+
+<p>Ask two or three of these on every problem. They are cheap, they are always
+reasonable, and they buy thinking time that looks like diligence.</p>
+
+<div class="two-col">
+<ul>
+  <li>Should I return the values, or the indices?</li>
+  <li>Can the input be empty?</li>
+  <li>Are duplicates possible?</li>
+  <li>Can values be negative? Zero?</li>
+  <li>Is the input already sorted?</li>
+  <li>Is exactly one valid answer guaranteed?</li>
+  <li>If several answers are valid, is any one acceptable?</li>
+  <li>What should I return when there is no answer?</li>
+  <li>May I modify the input in place?</li>
+  <li>How large can the input get?</li>
+  <li>Can the same element be used twice?</li>
+  <li>Does case, whitespace, or Unicode matter?</li>
+</ul>
+</div>
+
+<h2>Standard breaks</h2>
+
+<p>The usual suspects. Run a new problem past this list and something will
+almost always stick.</p>
+
+<div class="two-col">
+<ul>
+  <li>Empty input — <code>[]</code>, <code>""</code>, <code>null</code></li>
+  <li>One element</li>
+  <li>Two elements — the smallest interesting case</li>
+  <li>All elements identical</li>
+  <li>Already sorted, and sorted backwards</li>
+  <li>Negative numbers, and zero</li>
+  <li>No valid answer exists</li>
+  <li>Every answer is valid</li>
+  <li>Integer overflow on a sum or product</li>
+  <li>Target is the first, or the last, element</li>
+  <li>Duplicates of the thing being searched for</li>
+  <li>Single-character or single-node structures</li>
+</ul>
+</div>
+
+<hr class="dinkus">
+
+<div class="colophon">
+  <h3>Where this comes from</h3>
+  <ul>
+    <li>The five lines are an interview-shaped version of the first phase of
+      George Pólya's <em>How to Solve It</em> (1945) — "Understand the problem."
+      <a href="https://home.sandiego.edu/~pmyers/foursteps.htm">Pólya's four phases</a>.</li>
+    <li><a href="https://www.techinterviewhandbook.org/">Tech Interview Handbook</a>
+      — Yangshun Tay's free guide, for interview technique and per-topic cheat sheets.</li>
+  </ul>
+
+  <h3>Related</h3>
+  <ul>
+    <li><a href="../lessons/0001-the-problem-contract.html">Lesson 1 — The Problem Contract</a></li>
+    <li><a href="../RESOURCES.md">All resources</a> · <a href="../MISSION.md">Mission</a></li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>This card is not finished.</strong> It grows as you do. When you hit
+    a clarifying question or an edge case that is not on it, tell your teacher
+    and it gets added.
+  </div>
+</div>
+
+</div>
+</body>
+</html>

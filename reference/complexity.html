@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · Complexity</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  table.cmp { width: 100%; border-collapse: collapse; margin: 1.4rem 0; font-size: 0.86rem; }
+  table.cmp th, table.cmp td { text-align: left; padding: 0.52rem 0.65rem;
+    border-bottom: 1px solid var(--rule); vertical-align: top; }
+  table.cmp th { font-family: var(--sans); font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+  table.cmp code { font-size: 0.79rem; }
+  table.cmp td.verdict { font-family: var(--mono); font-weight: 700; white-space: nowrap; }
+  table.cmp td.shape { font-family: var(--mono); font-size: 0.78rem; }
+  table.cmp td.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+  table.cmp tr.danger td.verdict { color: var(--bad); }
+  table.cmp tr.fine td.verdict { color: var(--good); }
+  .trap { border-left: 3px solid var(--bad); background: var(--paper-sunk);
+    border-radius: 3px; padding: 1rem 1.2rem; margin: 1.6rem 0; }
+  .trap-label { font-family: var(--sans); font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.11em; text-transform: uppercase; color: var(--bad);
+    display: block; margin-bottom: 0.45rem; }
+  .procedure { counter-reset: step; list-style: none; padding: 0; margin: 1.5rem 0; }
+  .procedure li { counter-increment: step; position: relative;
+    padding: 0 0 0 2.4rem; margin-bottom: 0.85rem; font-size: 0.94rem; }
+  .procedure li::before { content: counter(step); position: absolute; left: 0; top: 0.05rem;
+    font-family: var(--sans); font-size: 0.7rem; font-weight: 700; color: var(--paper);
+    background: var(--accent); width: 1.45rem; height: 1.45rem; border-radius: 50%;
+    display: grid; place-items: center; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <p class="eyebrow">Reference Card</p>
+  <h1>Complexity</h1>
+  <p class="standfirst">How to read time and space complexity straight off the
+  shape of the code, and how to turn an input bound into a verdict about which
+  approach you are allowed to use.</p>
+  <p class="meta">Algorithms workspace · TypeScript ·
+  Last updated after <a href="../lessons/0005-complexity.html">Lesson 5</a></p>
+</header>
+
+<h2>The reading procedure</h2>
+
+<p>Big-O is not a formula you derive. It is a shape you recognise. Four steps,
+in order, every time:</p>
+
+<ol class="procedure">
+  <li><strong>Find the innermost line that does real work.</strong> A comparison,
+  a swap, an assignment, a hash lookup. Ignore everything else.</li>
+  <li><strong>Count how many times it runs, as a function of n.</strong> Not
+  exactly — approximately. You want the shape, not the constant.</li>
+  <li><strong>Drop constants and lower-order terms.</strong>
+  <code>3n² + 90n + 7</code> is O(n²). Always.</li>
+  <li><strong>Add the hidden loops.</strong> Every call inside your loop has its
+  own cost. <code>arr.includes(x)</code> inside a loop over <code>arr</code> is
+  two nested loops wearing one line of code.</li>
+</ol>
+
+<h2>Shape → complexity</h2>
+
+<p>This table is the whole skill. Nine shapes cover almost every interview
+answer.</p>
+
+<table class="cmp">
+  <thead>
+    <tr><th style="width:11rem">Complexity</th><th>The shape in code</th><th>Where you have seen it</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="verdict">O(1)</td>
+      <td class="shape">No loop over the input. Arithmetic, one index, one hash lookup.</td>
+      <td><code>map.get(k)</code>, <code>arr[i]</code>, <code>arr.push(x)</code></td>
+    </tr>
+    <tr>
+      <td class="verdict">O(log n)</td>
+      <td class="shape">One loop, and the range <em>halves</em> each pass —
+      <code>i *= 2</code>, <code>hi = mid</code>, <code>n = n / 2</code>.</td>
+      <td>Binary search; the <em>depth</em> of merge sort's split</td>
+    </tr>
+    <tr>
+      <td class="verdict">O(n)</td>
+      <td class="shape">One loop over the input. Or several loops
+      <em>one after another</em> — sequential loops add, they do not multiply.</td>
+      <td><code>merge</code>; the hash-map pass of Two Sum</td>
+    </tr>
+    <tr>
+      <td class="verdict">O(n log n)</td>
+      <td class="shape">Split the input in half, recurse on both, and do
+      <em>linear</em> work to combine. Or: sort the input, then one pass.</td>
+      <td>Merge sort; <code>arr.sort()</code></td>
+    </tr>
+    <tr>
+      <td class="verdict">O(n²)</td>
+      <td class="shape">Two nested loops, both over the input.
+      <strong>Including when the inner one is bounded by the outer</strong> —
+      that halves the work and changes nothing asymptotically.</td>
+      <td>Insertion sort; brute-force Two Sum</td>
+    </tr>
+    <tr>
+      <td class="verdict">O(n · m)</td>
+      <td class="shape">Two nested loops over <em>two different</em> inputs.
+      Do not collapse this to n² — say both letters.</td>
+      <td>Substring search; grid traversal (rows × cols)</td>
+    </tr>
+    <tr>
+      <td class="verdict">O(n³)</td>
+      <td class="shape">Three nested loops over the input.</td>
+      <td>Naive three-sum</td>
+    </tr>
+    <tr>
+      <td class="verdict">O(2ⁿ)</td>
+      <td class="shape">Recursion that branches <em>twice</em> and does not
+      shrink the problem by half — a take-it-or-leave-it choice per element.</td>
+      <td>All subsets; naive recursive Fibonacci</td>
+    </tr>
+    <tr>
+      <td class="verdict">O(n!)</td>
+      <td class="shape">Recursion that tries every remaining element at every
+      position.</td>
+      <td>All permutations; travelling salesman by brute force</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="trap">
+  <span class="trap-label">The trap that catches everyone</span>
+  <p style="margin:0 0 0.6rem"><strong>A triangular nested loop is still
+  O(n²).</strong> Insertion sort's inner loop only walks back over the sorted
+  prefix, so it does <code>n(n−1)/2</code> comparisons, not <code>n²</code>. At
+  n = 1000 that is 499,500 rather than 1,000,000 — genuinely half the work, and
+  <em>still O(n²)</em>.</p>
+  <p style="margin:0">Big-O throws away the ½. That is not a flaw in the
+  notation; it is the notation doing its job. A constant factor does not change
+  what happens when n doubles, and what happens when n doubles is the only
+  question Big-O answers.</p>
+</div>
+
+<h2>Simplification rules</h2>
+
+<dl>
+  <dt><strong>Drop constant factors.</strong></dt>
+  <dd>O(3n) is O(n). O(n/2) is O(n).</dd>
+
+  <dt><strong>Drop lower-order terms.</strong></dt>
+  <dd>O(n² + n) is O(n²). The bigger term wins for large n, and Big-O only
+  describes large n.</dd>
+
+  <dt><strong>Sequential work adds; nested work multiplies.</strong></dt>
+  <dd>Loop, then another loop → O(n + n) = O(n). Loop inside a loop → O(n · n) =
+  O(n²). This one distinction resolves most disagreements.</dd>
+
+  <dt><strong>Keep distinct variables distinct.</strong></dt>
+  <dd>Two inputs of different sizes give O(n + m) or O(n · m). Collapsing them to
+  n loses real information and interviewers notice.</dd>
+
+  <dt><strong>The base of a log does not matter.</strong></dt>
+  <dd>log₂n and log₁₀n differ by a constant factor, which rule one just deleted.
+  Write O(log n).</dd>
+</dl>
+
+<h2>Space complexity — what actually counts</h2>
+
+<p>Space is <em>extra</em> memory, beyond the input you were handed. Two things
+to add up:</p>
+
+<table class="cmp">
+  <thead>
+    <tr><th style="width:11rem">Source</th><th>How to count it</th><th>Example</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="verdict">Allocations</td>
+      <td class="shape">Anything you create whose size grows with n — an output
+      array, a <code>Map</code>, a <code>slice()</code>, a spread copy.</td>
+      <td>Two Sum's hash map: O(n)</td>
+    </tr>
+    <tr>
+      <td class="verdict">Call stack</td>
+      <td class="shape">The <em>maximum depth</em> of the recursion, not the total
+      number of calls. Splitting in half gives depth log n; peeling one element
+      gives depth n.</td>
+      <td>Merge sort's stack: O(log n)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>So merge sort is O(n) space: the arrays it allocates dominate the O(log n)
+stack. Insertion sort is O(1): a few index variables, whatever n is. A handful of
+counters is never O(n), no matter how many of them there are.</p>
+
+<div class="trap">
+  <span class="trap-label">Hidden allocation in JavaScript</span>
+  <p style="margin:0">Copying is invisible in JS syntax. <code>arr.slice()</code>,
+  <code>[...arr]</code>, <code>arr.concat(b)</code>, and
+  <code>str1 + str2</code> all allocate. A copy inside a loop turns O(n) time
+  into O(n²) time and O(1) space into O(n) space, and nothing in the code looks
+  like a loop.</p>
+</div>
+
+<h2>The cost of every built-in you reach for</h2>
+
+<p>Rule 4 of the reading procedure — <em>add the hidden loops</em> — needs this
+table. Anything marked O(n) is a loop in disguise.</p>
+
+<table class="cmp">
+  <thead>
+    <tr><th style="width:14rem">Operation</th><th style="width:7rem">Time</th><th>Why</th></tr>
+  </thead>
+  <tbody>
+    <tr class="fine"><td class="shape">arr[i], arr.length</td><td class="verdict">O(1)</td><td>Direct index.</td></tr>
+    <tr class="fine"><td class="shape">arr.push(x), arr.pop()</td><td class="verdict">O(1)*</td><td>Amortised — occasional resize, averaged away.</td></tr>
+    <tr class="danger"><td class="shape">arr.shift(), arr.unshift(x)</td><td class="verdict">O(n)</td><td>Every remaining element shifts index.</td></tr>
+    <tr class="danger"><td class="shape">arr.includes / indexOf / find</td><td class="verdict">O(n)</td><td>Linear scan. The classic hidden inner loop.</td></tr>
+    <tr class="danger"><td class="shape">arr.slice(a, b), [...arr]</td><td class="verdict">O(k)</td><td>Copies k elements, and allocates them.</td></tr>
+    <tr class="danger"><td class="shape">arr.concat(b)</td><td class="verdict">O(n + m)</td><td>Builds a whole new array.</td></tr>
+    <tr><td class="shape">arr.sort()</td><td class="verdict">O(n log n)</td><td>V8 uses TimSort — stable, adaptive.</td></tr>
+    <tr class="fine"><td class="shape">map.get / set / has</td><td class="verdict">O(1)*</td><td>Average case. Hashing, not scanning.</td></tr>
+    <tr class="fine"><td class="shape">set.add / has</td><td class="verdict">O(1)*</td><td>Same structure underneath.</td></tr>
+    <tr class="danger"><td class="shape">s += x, in a loop</td><td class="verdict">O(n²)</td><td>Strings are immutable; each += copies.</td></tr>
+  </tbody>
+</table>
+
+<p style="font-size:0.85rem;color:var(--ink-soft)">* Amortised or average case.
+Say the word in an interview — it shows you know the guarantee is not
+worst-case.</p>
+
+<h2>Bound → verdict</h2>
+
+<p>The constraint line in a problem statement is not decoration. It tells you
+which complexities are allowed, which usually tells you the intended solution
+before you have thought of one. The bridge is a single number: <strong>a modern
+machine does a few hundred million simple operations per second.</strong></p>
+
+<table class="cmp">
+  <thead>
+    <tr><th style="width:9rem">If n is up to</th><th style="width:10rem">You can afford</th><th>Which usually means</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">10</td><td class="verdict">O(n!)</td><td>Try every permutation. Backtracking.</td></tr>
+    <tr><td class="num">20–25</td><td class="verdict">O(2ⁿ)</td><td>Every subset. Take-it-or-leave-it recursion.</td></tr>
+    <tr><td class="num">500</td><td class="verdict">O(n³)</td><td>Three nested loops are fine.</td></tr>
+    <tr><td class="num">5,000</td><td class="verdict">O(n²)</td><td>Brute-force pairs is acceptable.</td></tr>
+    <tr><td class="num">10⁶</td><td class="verdict">O(n log n)</td><td>Sort first, then one pass.</td></tr>
+    <tr><td class="num">10⁷ and up</td><td class="verdict">O(n)</td><td>One pass. Hash map, two pointers, sliding window.</td></tr>
+    <tr><td class="num">10¹⁸</td><td class="verdict">O(log n)</td><td>Binary search, or maths. You cannot even read the input.</td></tr>
+  </tbody>
+</table>
+
+<p style="font-size:0.85rem;color:var(--ink-soft)">Thresholds are
+order-of-magnitude heuristics, not laws, and trusted sources disagree at the
+edges: Laaksonen puts the O(n²) line at n ≤ 5,000 and the USACO Guide at
+n ≤ 7,500. That disagreement <em>is</em> the lesson — you are choosing between
+10⁶ and 10¹⁰, never between 5,000 and 7,500.</p>
+
+<div class="callout">
+  <span class="callout-label">How to say it out loud</span>
+  <p style="margin:0">"n is at most 1,000, so n² is about a million operations —
+  that runs in well under a second. Brute force is <em>allowed</em> here. I will
+  still use the hash map, because O(n) is easier to write correctly than a
+  careful double loop." <br>
+  That answer is better than "brute force is too slow," because it is
+  <em>true</em>, and it shows you did the arithmetic rather than reciting a rule.</p>
+</div>
+
+<h2>Vocabulary</h2>
+
+<dl>
+  <dt><strong>Big-O</strong></dt>
+  <dd>An upper bound on growth. O(n) means "grows no faster than linearly,
+  ignoring constants." In interviews it is used loosely to mean the actual growth
+  rate; say <em>worst case</em> or <em>average case</em> when it matters.</dd>
+
+  <dt><strong>Amortised</strong></dt>
+  <dd>Cost averaged over a sequence of operations. <code>push</code> is
+  O(1) amortised: most pushes are instant, an occasional one resizes the whole
+  array, and the average stays constant.</dd>
+
+  <dt><strong>Adaptive</strong></dt>
+  <dd>An algorithm whose cost improves on already-ordered input. Insertion sort
+  is adaptive; merge sort is not. Big-O in the worst case hides this, which is
+  why the best-case column exists on the
+  <a href="sorting.html">sorting card</a>.</dd>
+
+  <dt><strong>In place</strong></dt>
+  <dd>O(1) extra space — the algorithm rearranges the input rather than building
+  a new structure.</dd>
+</dl>
+
+<hr class="dinkus">
+
+<div class="colophon">
+  <h3>Sources</h3>
+  <ul>
+    <li><a href="https://usaco.guide/bronze/time-comp">USACO Guide — Time Complexity</a>
+      — the bound → verdict table, and the 10⁸ operations/second estimate</li>
+    <li><a href="https://cses.fi/book/book.pdf">Competitive Programmer's Handbook — Antti Laaksonen</a> (PDF),
+      §2.3 "Estimating efficiency" — the corroborating table</li>
+    <li><a href="https://www.bigocheatsheet.com/">Big-O Cheat Sheet</a> — data-structure and sorting tables</li>
+    <li><a href="https://v8.dev/blog/array-sort">Getting things sorted in V8</a>
+      — why <code>arr.sort()</code> is TimSort, stable since V8 7.0</li>
+    <li><a href="https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture1.pdf">Stanford CS161, Lecture 1</a> (PDF) — asymptotic notation, formally</li>
+  </ul>
+
+  <h3>Related</h3>
+  <ul>
+    <li><a href="../lessons/0005-complexity.html">Lesson 5 — Complexity</a></li>
+    <li><a href="sorting.html">Reference · Sorting</a> — the complexities in context</li>
+    <li><a href="problem-contract.html">Reference · The Problem Contract</a> — where the Bounds verdict goes</li>
+    <li><a href="curriculum.html">Reference · The Curriculum</a></li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>Print this one.</strong> Of the four cards in this workspace, this is
+    the one you will consult mid-problem. The two tables that matter are
+    <em>shape → complexity</em> and <em>bound → verdict</em>; everything else is
+    supporting detail.
+  </div>
+</div>
+
+</div>
+</body>
+</html>

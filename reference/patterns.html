@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference · Patterns</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .pat { border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+    border-radius: 3px; padding: 1.1rem 1.3rem; margin: 1.5rem 0;
+    background: var(--paper-sunk); break-inside: avoid; }
+  .pat h3 { margin: 0 0 0.5rem; font-family: var(--sans); font-size: 0.85rem;
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+  .pat .tell { font-family: var(--sans); font-size: 0.85rem; color: var(--ink-soft);
+    border-left: 2px solid var(--accent-dim); padding-left: 0.8rem; margin: 0.7rem 0; }
+  .pat p { font-size: 0.94rem; }
+  .pat pre { margin: 0.8rem 0 0; }
+  .pending { opacity: 0.55; }
+  .pending h3 { color: var(--ink-faint); }
+  table.cost { width:100%; border-collapse:collapse; margin:1.4rem 0; font-size:0.87rem; }
+  table.cost th, table.cost td { text-align:left; padding:0.5rem 0.65rem;
+    border-bottom:1px solid var(--rule); }
+  table.cost th { font-family:var(--sans); font-size:0.68rem; font-weight:700;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <p class="eyebrow">Reference Card</p>
+  <h1>Patterns</h1>
+  <p class="standfirst">The recurring shapes. Each one has a <em>tell</em> — the
+  thing in the problem that says "use me." Learn the tells, not the problems.</p>
+  <p class="meta">Algorithms workspace · TypeScript ·
+  Last updated after <a href="../lessons/0003-two-sum-from-contract-to-code.html">Lesson 3</a></p>
+</header>
+
+<div class="callout">
+  <span class="callout-label">Why patterns at all</span>
+  <p>Without them, every problem is new and you start from nothing — which is
+  what freezing feels like. A small number of shapes cover most interview
+  questions, so the real skill is <strong>classification</strong>: deciding which
+  family a problem belongs to, then applying a solution you already know. Aim to
+  name the family before you choose a data structure.</p>
+</div>
+
+<h2>Known</h2>
+
+<div class="pat">
+  <h3>Complement lookup · hash a collection, ask it directly</h3>
+  <p>You need to know whether a <em>specific, computable value</em> exists in a
+  collection. Instead of scanning for it, put the collection in a
+  <code>Map</code> or <code>Set</code> and ask in O(1).</p>
+
+  <div class="tell"><strong>The tell:</strong> an inner loop searching for a
+  value you can calculate from the current element — <code>target - x</code>,
+  <code>x / 2</code>, a matching key. If you can compute what you are looking
+  for, you should not be scanning for it.</div>
+
+  <p><strong>Trade:</strong> O(n²) → O(n) time, at the cost of O(n) space.
+  Trading memory for speed is the most common optimisation in interview
+  problems, and saying that trade out loud is worth marks.</p>
+
+  <p><strong>Map or Set?</strong> <code>Map</code> when you need
+  <em>where</em> it was (an index). <code>Set</code> when you only need
+  <em>whether</em> it exists.</p>
+
+<pre><code>function twoSum(nums: number[], target: number): number[] {
+  const seen = new Map&lt;number, number&gt;();   // value -&gt; index
+  for (let i = 0; i &lt; nums.length; i++) {
+    const complement = target - nums[i];
+    if (seen.has(complement)) return [seen.get(complement)!, i];
+    seen.set(nums[i], i);                    // insert AFTER the check
+  }
+  return [];
+}</code></pre>
+
+  <p style="margin-top:0.8rem"><strong>The one rule:</strong> check before you
+  insert. It is what stops an element pairing with itself, and it means
+  <code>[5]</code> with target 10 correctly returns nothing while
+  <code>[3,3]</code> with target 6 correctly returns <code>[0,1]</code>. No
+  special case required.</p>
+
+  <p><strong>Seen in:</strong> Two Sum · Contains Duplicate · Valid Anagram ·
+  Group Anagrams · Longest Consecutive Sequence.</p>
+</div>
+
+<div class="pat pending">
+  <h3>Two pointers</h3>
+  <p>Not yet taught — Lesson 10.</p>
+</div>
+
+<div class="pat pending">
+  <h3>Sliding window</h3>
+  <p>Not yet taught — Lesson 11.</p>
+</div>
+
+<div class="pat pending">
+  <h3>Divide and conquer</h3>
+  <p>Not yet taught — arrives with merge sort, Lesson 4.</p>
+</div>
+
+<h2>Reading the bounds</h2>
+
+<p>Before choosing a pattern, convert the input size into a verdict. This is the
+Bounds line of the <a href="problem-contract.html">problem contract</a> doing its
+job.</p>
+
+<table class="cost">
+  <thead><tr><th>If n is about…</th><th>You can afford…</th></tr></thead>
+  <tbody>
+    <tr><td>n ≤ 20</td><td>O(2ⁿ) — subsets, backtracking</td></tr>
+    <tr><td>n ≤ 500</td><td>O(n³)</td></tr>
+    <tr><td>n ≤ 5,000</td><td>O(n²) — nested loops are fine</td></tr>
+    <tr><td>n ≤ 10⁶</td><td>O(n log n) — sort, heap, binary search</td></tr>
+    <tr><td>n &gt; 10⁶</td><td>O(n) or better — one pass, hash map, two pointers</td></tr>
+  </tbody>
+</table>
+
+<p style="font-size:0.87rem;color:var(--ink-soft)"><strong>Worked example.</strong>
+<code>2 ≤ nums.length ≤ 1000</code> means n² = 10⁶, so a nested loop
+<em>is</em> acceptable. Write the simple version without anxiety, then improve it.
+Change the bound to 10⁵ and n² becomes 10¹⁰ — brute force is dead before you
+type.</p>
+
+<h2>JavaScript costs worth knowing</h2>
+
+<table class="cost">
+  <thead><tr><th>Operation</th><th>Cost</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td><code>map.get</code> / <code>map.set</code> / <code>map.has</code></td><td>O(1)</td><td>Average case</td></tr>
+    <tr><td><code>set.add</code> / <code>set.has</code></td><td>O(1)</td><td>Average case</td></tr>
+    <tr><td><code>arr.includes</code> / <code>arr.indexOf</code></td><td>O(n)</td><td><strong>The trap.</strong> Inside a loop this rebuilds O(n²)</td></tr>
+    <tr><td><code>arr.push</code> / <code>arr.pop</code></td><td>O(1)</td><td>Amortised</td></tr>
+    <tr><td><code>arr.shift</code> / <code>arr.unshift</code></td><td>O(n)</td><td>Every element moves</td></tr>
+    <tr><td><code>arr.slice</code></td><td>O(n)</td><td>Copies — watch it inside loops</td></tr>
+    <tr><td><code>arr.sort</code></td><td>O(n log n)</td><td>Default is lexicographic — pass a comparator for numbers</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <span class="callout-label">The most common accidental O(n²)</span>
+  <p>Using <code>arr.includes(x)</code> inside a loop. It looks like a lookup and
+  reads like a lookup, but it is a linear scan. That is precisely the thing the
+  complement-lookup pattern exists to replace.</p>
+</div>
+
+<hr class="dinkus">
+
+<div class="colophon">
+  <h3>Sources</h3>
+  <ul>
+    <li><a href="https://www.techinterviewhandbook.org/algorithms/hash-table/">Tech Interview Handbook — Hash Table</a></li>
+    <li><a href="https://neetcode.io/roadmap">NeetCode roadmap</a> — topic dependency order</li>
+  </ul>
+
+  <h3>Related</h3>
+  <ul>
+    <li><a href="../lessons/0003-two-sum-from-contract-to-code.html">Lesson 3 — From Contract to Code</a></li>
+    <li><a href="problem-contract.html">Reference · The Problem Contract</a> ·
+        <a href="sorting.html">Reference · Sorting</a></li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>This card is the one that matters most.</strong> It is the antidote
+    to "every problem feels new." Every pattern you learn gets a tell written
+    here — and the tell is the part to memorise.
+  </div>
+</div>
+
+</div>
+</body>
+</html>

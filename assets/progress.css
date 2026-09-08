@@ -1,0 +1,81 @@
+/* progress.css — checklist styling for reference documents. */
+
+.track {
+  list-style: none;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+  margin: 0;
+}
+
+.track:last-child { border-bottom: 0; }
+
+.track-box {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.18rem;
+  border: 1.5px solid var(--accent-dim);
+  border-radius: 3px;
+  background: var(--paper);
+  color: var(--paper);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.track-box:hover { border-color: var(--accent); }
+.track-box:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+
+.track[data-done="true"] .track-box {
+  background: var(--good);
+  border-color: var(--good);
+  color: #fff;
+}
+
+.track[data-done="true"] .track-label { color: var(--ink-faint); }
+.track[data-done="true"] .track-label strong { text-decoration: line-through; }
+
+.track-label { flex: 1 1 auto; }
+.track-label strong { display: block; font-size: 0.97rem; margin-bottom: 0.15rem; }
+.track-label .crit {
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  display: block;
+}
+.track-label .meta-tag {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-left: 0.5rem;
+}
+.track-label .meta-tag.done { color: var(--good); }
+
+.progress-shell {
+  height: 6px;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0.6rem 0 0;
+}
+.progress-fill { height: 100%; background: var(--good); width: 0; transition: width 0.25s; }
+
+@media print {
+  .track-box { border-color: #666; }
+  .progress-shell { display: none; }
+}

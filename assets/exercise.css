@@ -1,0 +1,162 @@
+/* ==========================================================================
+   exercise.css — live code exercises. Depends on course.css custom properties.
+   ========================================================================== */
+
+.exercise {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--link);
+  border-radius: 3px;
+  background: var(--paper-sunk);
+  padding: 1.25rem 1.4rem;
+  margin: 2.2rem 0;
+}
+
+.ex-kicker {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--link);
+  display: block;
+  margin-bottom: 0.6rem;
+  font-variant-numeric: lining-nums;
+}
+
+.ex-brief { font-size: 1rem; margin: 0 0 0.9rem; line-height: 1.5; }
+.ex-brief code { font-weight: 500; }
+
+.ex-note {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+  margin: 0 0 0.7rem;
+  line-height: 1.5;
+}
+
+.ex-code {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 9rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.8rem 0.95rem;
+  resize: vertical;
+  tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+
+.ex-code:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
+
+.ex-bar { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+
+.btn.ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--rule);
+}
+.btn.ghost:hover { color: var(--ink); border-color: var(--accent-dim); }
+
+.btn.run { background: var(--link); border-color: var(--link); }
+
+/* --- results ------------------------------------------------------------- */
+
+.ex-results { margin-top: 1rem; }
+.ex-results:empty { display: none; }
+
+.ex-summary {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 0.85rem;
+  border-radius: 3px;
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.02em;
+}
+.ex-summary.all-pass { background: var(--good-bg); color: var(--good); border: 1px solid var(--good); }
+.ex-summary.some-fail { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad); }
+
+.ex-case {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-left-width: 3px;
+  border-radius: 3px;
+  margin-bottom: 0.4rem;
+  background: var(--paper);
+  overflow-x: auto;
+}
+.ex-case.pass { border-left-color: var(--good); }
+.ex-case.fail { border-left-color: var(--bad); }
+
+.ex-case .tag {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-right: 0.6rem;
+}
+.ex-case.pass .tag { color: var(--good); }
+.ex-case.fail .tag { color: var(--bad); }
+
+.ex-case .label { color: var(--ink-faint); }
+.ex-case .got { color: var(--bad); font-weight: 700; }
+.ex-case .want { color: var(--good); font-weight: 700; }
+.ex-case dl { margin: 0.4rem 0 0; }
+.ex-case .row { margin-top: 0.15rem; }
+
+.ex-error {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  background: var(--bad-bg);
+  border: 1px solid var(--bad);
+  border-radius: 3px;
+  padding: 0.7rem 0.85rem;
+  color: var(--bad);
+  line-height: 1.55;
+}
+
+/* --- hints & solution ---------------------------------------------------- */
+
+.ex-hint, .ex-answer {
+  margin-top: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+.ex-hint { border-left: 3px solid var(--accent-dim); }
+.ex-answer { border-left: 3px solid var(--good); }
+.ex-answer pre { margin: 0.5rem 0 0; }
+.ex-hint > :last-child, .ex-answer > :last-child { margin-bottom: 0; }
+
+.ex-hint .verdict, .ex-answer .verdict {
+  font-family: var(--sans);
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+.ex-hint .verdict { color: var(--accent); }
+.ex-answer .verdict { color: var(--good); }
+
+@media print {
+  .ex-bar { display: none; }
+  .ex-answer, .ex-hint { display: block !important; }
+  .ex-code { min-height: 3rem; }
+}

@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 · The Problem Contract</title>
+<link rel="stylesheet" href="../assets/course.css">
+<link rel="stylesheet" href="../assets/widgets.css">
+</head>
+<body>
+<div class="page anchor">
+
+<header class="masthead">
+  <p class="eyebrow">Lesson 01 · Problem solving</p>
+  <h1>The Problem Contract</h1>
+  <p class="standfirst">You do not freeze because you lack knowledge. You freeze
+  because you are trying to answer an unanswerable question. Here is how to
+  replace it with five answerable ones.</p>
+  <p class="meta">≈20 minutes · TypeScript · Companion card:
+  <a href="../reference/problem-contract.html">The Problem Contract</a></p>
+</header>
+
+<p class="lede">There is a specific moment you have described, and it is worth
+being precise about it. The problem appears. You read it twice. You understand
+every word in it. And then your hands are on the keyboard and nothing happens —
+not because you do not know what a hash map is, but because the only question in
+your head is <em>how do I solve this?</em></p>
+
+<p>That question has no handle on it. It is too big to pick up. Your mind
+searches for the whole answer at once, fails to find it, and reports back as
+blankness. This is not a knowledge failure and grinding more problems will not
+fix it, because more problems just means more repetitions of the same
+unanswerable question.<span class="sidenote">The pattern-based prep industry —
+Grokking, NeetCode, AlgoExpert — exists because of exactly this. Their shared
+claim is that a small number of recurring problem shapes cover most interview
+questions, so the useful skill is <em>classification</em>, not invention. We get
+to classification in Lesson 2. First we need something to classify.</span></p>
+
+<p>The fix is old. In 1945 the Hungarian mathematician George Pólya wrote
+<em>How to Solve It</em>, and split problem solving into four phases:
+<strong>understand the problem</strong>, <strong>devise a plan</strong>,
+<strong>carry out the plan</strong>, and <strong>look back</strong>. Every
+coding-interview framework you will ever be sold is a repackaging of those four
+(<a href="https://home.sandiego.edu/~pmyers/foursteps.htm">Pólya's four
+phases</a>). The important part is not the list. It is that Pólya put
+<em>understand</em> in its own phase, with its own guiding questions, and
+insisted you finish it before planning anything.</p>
+
+<p>Freezing is what happens when you skip straight to phase three.</p>
+
+<p>This lesson drills phase one and nothing else. One tool, one habit, one win.</p>
+
+<div class="recall" data-recall>
+  <span class="recall-kicker">Before we start · from memory</span>
+  <p class="recall-q">Think of the last algorithm problem that beat you. What did
+  you actually <em>do</em> in the first minute after reading it? Be honest and
+  specific — write two or three lines.</p>
+  <textarea placeholder="In the first minute I…"></textarea>
+  <button class="btn">Show what usually happens</button>
+  <div class="recall-answer" hidden>
+    <span class="verdict">The common answer</span>
+    <p>Most people write some version of: <em>"I re-read it, then I started
+    typing a loop to see where it went."</em> Re-reading feels like
+    understanding, but it is recognition, not comprehension — and starting a
+    loop is phase three. If what you wrote resembles this, that is the thing
+    this lesson replaces. If it does not, tell your teacher what you wrote; it
+    changes what you should be taught next.</p>
+  </div>
+</div>
+
+<h2><span class="num">The tool</span>Five lines before any code</h2>
+
+<p>A <strong>problem contract</strong> is five lines you write — physically
+write, in a comment block or on paper — before your first line of real code. It
+takes about three minutes. It is not note-taking. It is the act of converting
+one unanswerable question into five answerable ones.</p>
+
+<dl class="contract">
+  <div class="contract-row">
+    <dt>Given</dt>
+    <dd>Every input, with its type and shape. Not "an array" — "an array of
+    <code>number</code>, may be empty, may contain duplicates."</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Goal</dt>
+    <dd>The exact thing to return, as a type. Values or indices? One answer or
+    all of them? What comes back when nothing matches?</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Bounds</dt>
+    <dd>How big can it get, what range do the values span. This line quietly
+    tells you which complexity you are allowed to have.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Trace</dt>
+    <dd>One small example, worked by hand, no code. If you cannot produce the
+    output yourself, you do not yet understand the problem.</dd>
+  </div>
+  <div class="contract-row">
+    <dt>Breaks</dt>
+    <dd>The inputs that would embarrass you. Empty, single element, all
+    identical, no valid answer.</dd>
+  </div>
+</dl>
+
+<p>Notice what each line has in common: <em>you can answer it in isolation,
+without knowing the solution.</em> That is the entire mechanism. "How do I solve
+this?" has no entry point. "Can the array be empty?" has an obvious one, and
+answering it moves you.</p>
+
+<h2><span class="num">Worked</span>Two Sum, contracted</h2>
+
+<p>Here is the problem as an interviewer would say it, out loud, deliberately
+underspecified — because that is how they actually say it:</p>
+
+<div class="callout">
+  <span class="callout-label">The problem, as spoken</span>
+  <p style="margin:0">"Given an array of integers and a target, return the two
+  numbers that add up to the target."</p>
+</div>
+
+<p>Three minutes with the contract:</p>
+
+<pre><code>// Given:  nums: number[]  — unsorted, may contain duplicates and negatives
+//         target: number
+// Goal:   number[] of length 2 — INDICES, not values (had to ask)
+//         exactly one answer is guaranteed (had to ask)
+// Bounds: 2 <= nums.length <= 10^4  →  O(n^2) is 10^8, too slow. Need O(n).
+// Trace:  nums = [2, 7, 11, 15], target = 9
+//         2 + 7 = 9  →  indices [0, 1]
+// Breaks: two identical numbers summing to target, e.g. [3,3] target 6
+//         negative numbers: [-1, -2] target -3
+//         same element used twice — not allowed</code></pre>
+
+<p>Read what happened there. Two of those lines contain the words <em>had to
+ask</em>, and each one was a real ambiguity that would have cost you a rewrite.
+The <code>Bounds</code> line ruled out the nested loop before you typed it — not
+by cleverness, but by arithmetic. And the <code>Breaks</code> line surfaced
+<code>[3,3]</code>, which is the single most common way a Two Sum solution fails
+in an interview.</p>
+
+<p>You still have not solved anything. But you are no longer staring at a blank
+page: you are looking at a list of facts, and the next question — <em>which
+structure gives me O(1) lookup by value?</em> — is one you can already
+answer.<span class="sidenote">You know the answer. That is the point being made
+here. The knowledge was never missing; the path to it was.</span></p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Drill</span>Three checks</h2>
+
+<p>Answer before you look. Getting one wrong is more useful than getting it
+right, so resist the urge to hedge.</p>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 1 of 3</span>
+  <p class="quiz-q">The interviewer says: "Given an array of integers, return
+  the two numbers that add up to a target." Which clarifying question should you
+  ask <em>first</em>?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="It changes your return statement, your trace, and often your data structure — you cannot write correct code without it. The others change tactics; this one changes the goal itself.">Should I return indices or values?</button></li>
+    <li><button data-why="A real and necessary question — it is the [3,3] case — but it refines an approach you have not chosen yet. Ask it second.">Can the same element be reused?</button></li>
+    <li><button data-why="Genuinely useful, because sorted input unlocks two pointers. But it optimises a solution whose output shape you have not pinned down yet.">Is the input array already sorted?</button></li>
+    <li><button data-why="Worth knowing, and it rules out some tempting shortcuts. It is a Given-line detail though, not the thing blocking you from starting.">Are there negative numbers in it?</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 2 of 3</span>
+  <p class="quiz-q">Here is a contract for <em>"return the largest number in an
+  array."</em> <code>Given</code>: <code>number[]</code>. <code>Goal</code>:
+  <code>number</code>. <code>Bounds</code>: n ≤ 10⁵. <code>Trace</code>: [3,9,2]
+  → 9. <code>Breaks</code>: all negative values. What is missing?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="The empty array is the classic degenerate case. A naive loop seeded with the first element throws; one seeded with -Infinity returns something absurd. Either way you need to have decided what an empty input returns.">The array might be empty.</button></li>
+    <li><button data-why="Sorted input would be a Given-line detail and would make the problem trivial. It is not a break — nothing about your solution fails on sorted input.">The array might be sorted.</button></li>
+    <li><button data-why="Size belongs on the Bounds line, and it is already there at 10^5. A single pass handles that comfortably.">The array might be huge.</button></li>
+    <li><button data-why="Nesting would change the Given line — a different problem entirely, not an edge case of this one. Do not invent inputs the problem did not offer.">The array might be nested.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<div class="quiz" data-quiz>
+  <span class="quiz-kicker">Check 3 of 3</span>
+  <p class="quiz-q">Why does writing the contract actually stop the freeze?</p>
+  <ul class="quiz-opts">
+    <li><button data-correct data-why="That is the whole mechanism. 'How do I solve this?' offers nothing to grip. 'Can it be empty?' does — and five small answered questions leave you looking at facts instead of a blank page.">It replaces an open question with small ones.</button></li>
+    <li><button data-why="True, and it does help your signal in a real interview. But it is a side effect. If it only worked while someone was watching, it would be theatre, not a method — and it works alone too.">It shows the interviewer that you are careful.</button></li>
+    <li><button data-why="Close, but it has the causation backwards. The contract is not a delay tactic that waits for inspiration; it is the work that makes the pattern identifiable in the first place.">It gives your memory time to find something.</button></li>
+    <li><button data-why="Sometimes it does, and that is a pleasant bonus. But expecting it sets you up to feel you have failed when the algorithm does not appear — and it usually will not. The contract's job is to make the next question askable.">It often reveals the whole algorithm right away.</button></li>
+  </ul>
+  <div class="quiz-fb" hidden></div>
+</div>
+
+<p class="score" data-score>You have <b>0</b> of <b>0</b> correct.</p>
+
+<hr class="dinkus">
+
+<h2><span class="num">Retrieval</span>Now close the page in your head</h2>
+
+<p>Do not scroll up. Retrieving this while it feels slightly out of reach is
+what makes it stick — recalling something you read a minute ago builds almost
+nothing, while recalling it at the edge of forgetting builds a
+lot.<span class="sidenote">Robert Bjork's <em>desirable difficulties</em>:
+conditions that slow practice down — spacing, retrieval, interleaving — produce
+more durable learning, while fluent, easy practice creates a convincing illusion
+of mastery.
+<a href="https://www.unh.edu/teaching-learning-resource-hub/sites/default/files/media/2023-06/itow-introducing-desirable-difficulties-into-practice-and-instruction-bjork-and-bjork.pdf">Bjork
+&amp; Bjork on desirable difficulties</a> (PDF).</span></p>
+
+<div class="recall" data-recall>
+  <span class="recall-kicker">From memory</span>
+  <p class="recall-q">Write the five lines of the problem contract, in order,
+  and one phrase saying what each is for.</p>
+  <textarea placeholder="1. …"></textarea>
+  <button class="btn">Check against the card</button>
+  <div class="recall-answer" hidden>
+    <span class="verdict">The five lines</span>
+    <p><strong>Given</strong> — every input, with type and shape.<br>
+    <strong>Goal</strong> — the exact return type; values or indices.<br>
+    <strong>Bounds</strong> — sizes and ranges; tells you the complexity allowed.<br>
+    <strong>Trace</strong> — one example worked by hand, no code.<br>
+    <strong>Breaks</strong> — the inputs that would embarrass you.</p>
+    <p>Missed one? That is useful information, not a failure — the one you
+    dropped is the one to watch for tomorrow. Most people drop
+    <strong>Bounds</strong>, because it feels like trivia right up until it is
+    the line that tells you your approach is too slow.</p>
+  </div>
+</div>
+
+<hr class="dinkus">
+
+<h2><span class="num">Today's rep</span>One problem, no solution</h2>
+
+<p>This is the part that matters, and it should take ten minutes.</p>
+
+<ol class="steps">
+  <li>
+    <h3>Open a problem you have never seen</h3>
+    <p>Go to <a href="https://neetcode.io/practice">NeetCode's practice list</a>
+    and pick anything from <em>Arrays &amp; Hashing</em>. Easy is fine. Easy is
+    better, actually — the point is not difficulty.</p>
+  </li>
+  <li>
+    <h3>Write the contract. Do not solve it.</h3>
+    <p>Five lines in a comment block, in a <code>.ts</code> file. Three minutes.
+    Then <strong>stop</strong> — genuinely stop, and do not write the solution.
+    Sitting with a fully understood, unsolved problem is the uncomfortable part,
+    and it is the part doing the work.</p>
+  </li>
+  <li>
+    <h3>Check the constraints against your contract</h3>
+    <p>Reveal the problem's stated constraints and compare them with your
+    <code>Bounds</code> and <code>Breaks</code> lines. Every edge case you
+    missed is a genuine finding about your own blind spots — write it down.</p>
+  </li>
+  <li>
+    <h3>Bring it back</h3>
+    <p>Paste the contract to your teacher. Feedback on the contract is the
+    feedback loop for this skill; you cannot self-grade the questions you did
+    not think to ask.</p>
+  </li>
+</ol>
+
+<div class="callout warn">
+  <span class="callout-label">The trap</span>
+  <p>You will want to solve it. The pull is strong and it feels like
+  productivity. But solving is phase three, and phase three is the one you can
+  already do — you have shipped real software; carrying out a plan is not your
+  problem. Practising the phase you are already good at is how three months
+  disappear with nothing changed.</p>
+</div>
+
+<hr>
+
+<div class="colophon">
+
+  <h3>Read this next</h3>
+  <p><strong><a href="https://www.techinterviewhandbook.org/coding-interview-techniques/">Tech
+  Interview Handbook — Coding Interview Techniques</a></strong>. Fifteen minutes.
+  Yangshun Tay is an ex-Meta staff engineer and the author of the Blind 75 list;
+  the handbook is free, open source, and sells you nothing, which makes it the
+  most trustworthy general guide in a field thick with course marketing. Read the
+  section on what to do before writing code and notice how much of it is the
+  contract under different names.</p>
+
+  <h3>Sources for this lesson</h3>
+  <ul>
+    <li><a href="https://home.sandiego.edu/~pmyers/foursteps.htm">Pólya's four phases of problem solving</a> — <em>How to Solve It</em> (1945), the origin of "understand before you plan."</li>
+    <li><a href="https://www.unh.edu/teaching-learning-resource-hub/sites/default/files/media/2023-06/itow-introducing-desirable-difficulties-into-practice-and-instruction-bjork-and-bjork.pdf">Bjork &amp; Bjork, <em>Introducing Desirable Difficulties Into Practice and Instruction</em></a> (PDF) — why the retrieval drills above are deliberately uncomfortable.</li>
+    <li><a href="https://www.techinterviewhandbook.org/">Tech Interview Handbook</a> and <a href="https://www.techinterviewhandbook.org/grind75/">Grind 75</a> — interview technique and problem selection.</li>
+    <li><a href="https://neetcode.io/roadmap">NeetCode roadmap</a> — the topic dependency tree this course follows.</li>
+  </ul>
+
+  <h3>In this workspace</h3>
+  <ul>
+    <li><a href="../reference/problem-contract.html">Reference · The Problem Contract</a> — print this one</li>
+    <li><a href="../MISSION.md">Mission</a> · <a href="../RESOURCES.md">Resources</a></li>
+    <li>Lesson 2 — <em>naming the pattern</em>. Not written yet: it gets built around what your first contracts actually reveal.</li>
+  </ul>
+
+  <div class="ask no-print">
+    <strong>Your teacher is one message away.</strong> If a step felt arbitrary,
+    if you disagree with a drill answer, or if the contract falls apart on a real
+    problem — say so. Bring the contract you wrote today. The disagreements are
+    the most useful thing you can hand back, because they show me where the
+    explanation is thin.
+  </div>
+
+</div>
+
+</div>
+<script src="../assets/widgets.js"></script>
+</body>
+</html>
