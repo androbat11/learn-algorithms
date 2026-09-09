@@ -93,6 +93,41 @@ for the porting phase.
   the algorithms to[o]."* Lesson 1 was pure method; that was right for one
   lesson, not for the course.
 
+## Practice harness — added 2026-09-09
+
+He asked for *"a repository of exercises with test so I can also practice
+everything, since right now there's lot of theory and I also need practice."*
+That is `practice/` — 12 problems, zero dependencies, `node:test`.
+
+**This does not violate the no-new-lessons rule.** The rule is about lessons.
+The curriculum always budgeted two thirds of sessions for practice and there was
+nowhere to do it, so the backlog was theory-only by construction. His instinct
+was right and it was a real gap in the workspace.
+
+**The distinctive feature is measured complexity.** 8 of 12 problems run the
+solution at n and 2n and compare the work, rejecting a correct-but-quadratic
+answer. Two counters: index reads via `Proxy` (search/scan/pairs) and
+comparisons via `valueOf` boxes (sorts, which copy the array and defeat read
+counting).
+
+**Four problems have no complexity check and say so** — 01 is inherently O(n²);
+10, 11 and 12 are string problems whose solutions build a filtered copy that
+neither counter can follow. Time budgets were tried and *demonstrably failed* — a
+quadratic palindrome and a quadratic anagram both came in under budget. Removed
+rather than shipped. Do not re-add a check here without proving it rejects a
+slow-but-correct solution first.
+
+**Verification protocol, apply it to any new problem.** Every reference solution
+must pass its own tests; every stub must fail; every machine-checked problem must
+reject a slow-but-correct implementation. That last one caught four real bugs
+during the build — a double-escaped regex, a too-kind perf input on 12, a
+read-counter blind to 06's copy, and an input on 08 that let the naive solution
+short-circuit on the first element.
+
+The generator is not in the repo (it lives in session scratch). To add problems,
+regenerate from the same data shape — the format is documented in
+`practice/README.md`.
+
 ## The workspace is a git repo
 
 `~/learn-algorithms` is a git repository, pushed to

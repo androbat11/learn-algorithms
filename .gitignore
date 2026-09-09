@@ -10,6 +10,9 @@ Thumbs.db
 .claude/settings.local.json
 .claude/local/
 
+# Practice: archived attempts from `reset` / `drill` are local scratch
+practice/.attempts/
+
 # Scratch
 *.log
 tmp/

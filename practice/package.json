@@ -1,0 +1,16 @@
+{
+  "name": "learn-algorithms-practice",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Practice problems with tests that check correctness AND complexity. No dependencies.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node run.mjs test",
+    "list": "node run.mjs list",
+    "next": "node run.mjs next",
+    "drill": "node run.mjs drill",
+    "reset": "node run.mjs reset",
+    "solution": "node run.mjs solution"
+  }
+}

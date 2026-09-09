@@ -27,6 +27,12 @@ for why that rule exists.
 
 ### Start here
 
+Two things, and they alternate. **Lessons** teach; **practice** makes it a skill.
+
+```bash
+cd practice && npm run next     # 12 problems, tests included, no install
+```
+
 Open [`lessons/0002-insertion-sort.html`](lessons/0002-insertion-sort.html) in a
 browser. Double-clicking the file works — there is no build step, no server, and
 no dependencies. Three exercises; write each function in the textarea and press
@@ -87,6 +93,7 @@ convenience, not the record. The real record is `NOTES.md` and
 | `lessons/*.html` | The lessons. One tightly-scoped thing each, ~20–25 minutes, with live in-browser exercises. |
 | `reference/*.html` | Reference cards — the compressed essence of the lessons. Built to be printed and revisited. |
 | `learning-records/*.md` | What was actually learned, and decisions about the course. Numbered, append-only, like ADRs. |
+| `practice/` | **Practice problems with tests.** Correctness *and* measured complexity. `cd practice && npm run next`. |
 | `assets/` | Shared components: stylesheet, quiz and recall widgets, the exercise runner. |
 | `lessons/deferred-rust/` | Finished Rust material, parked until the porting phase. |
 | `.claude/skills/teach/` | The teaching skill itself, so the workspace is portable. |
@@ -102,6 +109,21 @@ convenience, not the record. The real record is `NOTES.md` and
 | [The Problem Contract](reference/problem-contract.html) | Given, Goal, Bounds, Trace, Breaks |
 
 ---
+
+## Practice
+
+[`practice/`](practice/README.md) holds 12 problems — 9 from
+[Grind 75](https://www.techinterviewhandbook.org/grind75/) in its own order, 3
+from the course. Zero dependencies; Node 18+ and nothing else.
+
+What makes it more than a stub folder: **8 of the 12 assert complexity by
+measurement.** The test runs your solution at n and at 2n and compares the work,
+so a correct-but-quadratic answer is rejected with an explanation rather than
+silently accepted. Every problem's stub also opens with the five-line contract
+block, which puts Lesson 1 on every rep.
+
+`npm run drill` is the one to build a habit around: it takes a problem you
+already solved, files your solution away, and hands back an empty stub.
 
 ## How the exercises work
 
